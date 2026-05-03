@@ -1,1 +1,1 @@
-# CLaRity -- CLaRa Lightweight Reimplementation, Threaded Inference Yielded
+# CLaRion - Continuous Latent augmented Retrieval Inference on n-cores
