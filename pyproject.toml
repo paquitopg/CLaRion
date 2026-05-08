@@ -1,16 +1,18 @@
 [project]
-name = "clara-rag"
+name = "clarion"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "paquitopg",email = "pacogoze@gmail.com"}
-]
+description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "cython>=3.2.4",
+    "logging>=0.4.9.6",
+    "numpy>=2.4.4",
+    "torch>=2.11.0",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+where = ["src"]
