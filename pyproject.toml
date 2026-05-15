@@ -6,13 +6,19 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "cython>=3.2.4",
+    "datasets>=4.8.5",
     "logging>=0.4.9.6",
     "numpy>=2.4.4",
     "torch>=2.11.0",
 ]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
+# Package layout: `src/` is itself a Python package (it has `src/__init__.py`),
+# so imports use the form `from src.parallel import X`. We intentionally do NOT
+# set `package-dir = {"" = "src"}` here — that would tell setuptools to strip
+# the `src/` prefix and look for packages like `parallel` at the top level,
+# which conflicts with how the code actually imports things. Leaving this
+# section out lets setuptools auto-discover `src` as a top-level package and
+# `src.parallel`, `src.models`, `src.index`, ... as sub-packages.
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["src*"]

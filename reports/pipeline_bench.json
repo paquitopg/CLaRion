@@ -1,0 +1,110 @@
+[
+  {
+    "label": "A | encode numpy serial",
+    "median_s": 0.04300045799982399,
+    "p95_s": 0.04300045799982399,
+    "min_s": 0.04300045799982399,
+    "samples": [
+      0.04300045799982399
+    ],
+    "metadata": {
+      "backend": "numpy",
+      "parallel": false
+    }
+  },
+  {
+    "label": "A | encode numpy + mp(w=2)",
+    "median_s": 0.03433850000010352,
+    "p95_s": 0.03433850000010352,
+    "min_s": 0.03433850000010352,
+    "samples": [
+      0.03433850000010352
+    ],
+    "metadata": {
+      "backend": "numpy",
+      "parallel": true,
+      "workers": 2
+    }
+  },
+  {
+    "label": "A | encode cython(nt=1) serial",
+    "median_s": 0.07854016600003888,
+    "p95_s": 0.07854016600003888,
+    "min_s": 0.07854016600003888,
+    "samples": [
+      0.07854016600003888
+    ],
+    "metadata": {
+      "backend": "cython",
+      "threads": 1,
+      "parallel": false
+    }
+  },
+  {
+    "label": "A | encode cython(nt=2) serial",
+    "median_s": 0.041765250000025844,
+    "p95_s": 0.041765250000025844,
+    "min_s": 0.041765250000025844,
+    "samples": [
+      0.041765250000025844
+    ],
+    "metadata": {
+      "backend": "cython",
+      "threads": 2,
+      "parallel": false
+    }
+  },
+  {
+    "label": "A | encode cython(1) + mp(w=2)",
+    "median_s": 0.058229332999871986,
+    "p95_s": 0.058229332999871986,
+    "min_s": 0.058229332999871986,
+    "samples": [
+      0.058229332999871986
+    ],
+    "metadata": {
+      "backend": "cython",
+      "threads": 1,
+      "parallel": true,
+      "workers": 2
+    }
+  },
+  {
+    "label": "B | retrieve numpy",
+    "median_s": 0.0002070419996016426,
+    "p95_s": 0.0002070419996016426,
+    "min_s": 0.0002070419996016426,
+    "samples": [
+      0.0002070419996016426
+    ],
+    "metadata": {
+      "backend": "numpy"
+    }
+  },
+  {
+    "label": "B | retrieve cython(nt=1)",
+    "median_s": 0.0007148749996304105,
+    "p95_s": 0.0007148749996304105,
+    "min_s": 0.0007148749996304105,
+    "samples": [
+      0.0007148749996304105
+    ],
+    "metadata": {
+      "backend": "cython",
+      "threads": 1
+    }
+  },
+  {
+    "label": "B | retrieve cython(nt=2)",
+    "median_s": 0.015356332999999722,
+    "p95_s": 0.015356332999999722,
+    "min_s": 0.015356332999999722,
+    "samples": [
+      0.015356332999999722
+    ],
+    "metadata": {
+      "backend": "cython",
+      "threads": 2
+    }
+  }
+]

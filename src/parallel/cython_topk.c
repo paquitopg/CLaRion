@@ -4,29 +4,35 @@
 {
     "distutils": {
         "depends": [
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayobject.h",
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayscalars.h",
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarrayobject.h",
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarraytypes.h",
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ufuncobject.h"
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayobject.h",
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayscalars.h",
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarrayobject.h",
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarraytypes.h",
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include/numpy/ufuncobject.h"
         ],
         "extra_compile_args": [
             "-O3",
+            "-ffast-math",
             "-march=native",
-            "-fopenmp"
+            "-Xpreprocessor",
+            "-fopenmp",
+            "-I/opt/homebrew/opt/libomp/include"
         ],
         "extra_link_args": [
-            "-fopenmp"
+            "-L/opt/homebrew/opt/libomp/lib",
+            "-lomp",
+            "-Wl,-rpath,/opt/homebrew/opt/libomp/lib"
         ],
         "include_dirs": [
-            "/home/onyxia/work/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include"
+            "/Users/pacogoze/Desktop/CLaRion/CLaRion/.venv/lib/python3.14/site-packages/numpy/_core/include"
         ],
-        "name": "parallel.cython_topk",
+        "language": "c",
+        "name": "src.parallel.cython_topk",
         "sources": [
             "src/parallel/cython_topk.pyx"
         ]
     },
-    "module_name": "parallel.cython_topk"
+    "module_name": "src.parallel.cython_topk"
 }
 END: Cython Metadata */
 
@@ -1144,8 +1150,8 @@ static int __Pyx_init_co_variables(void) {
   #endif
 #endif
 
-#define __PYX_HAVE__parallel__cython_topk
-#define __PYX_HAVE_API__parallel__cython_topk
+#define __PYX_HAVE__src__parallel__cython_topk
+#define __PYX_HAVE_API__src__parallel__cython_topk
 /* Early includes */
 #include <string.h>
 #include <stdio.h>
@@ -1805,23 +1811,23 @@ typedef npy_double __pyx_t_5numpy_double_t;
 */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "parallel/cython_topk.pyx":10
+/* "src/parallel/cython_topk.pyx":10
  * from libc.stdlib cimport rand
  * 
  * ctypedef np.float32_t F32             # <<<<<<<<<<<<<<
  * ctypedef np.int32_t I32
  * 
 */
-typedef __pyx_t_5numpy_float32_t __pyx_t_8parallel_11cython_topk_F32;
+typedef __pyx_t_5numpy_float32_t __pyx_t_3src_8parallel_11cython_topk_F32;
 
-/* "parallel/cython_topk.pyx":11
+/* "src/parallel/cython_topk.pyx":11
  * 
  * ctypedef np.float32_t F32
  * ctypedef np.int32_t I32             # <<<<<<<<<<<<<<
  * 
  * 
 */
-typedef __pyx_t_5numpy_int32_t __pyx_t_8parallel_11cython_topk_I32;
+typedef __pyx_t_5numpy_int32_t __pyx_t_3src_8parallel_11cython_topk_I32;
 /* #### Code section: complex_type_declarations ### */
 /* Declarations.proto */
 #if CYTHON_CCOMPLEX && (1) && (!0 || __cplusplus)
@@ -3320,7 +3326,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
 
 /* Module declarations from "libc.stdlib" */
 
-/* Module declarations from "parallel.cython_topk" */
+/* Module declarations from "src.parallel.cython_topk" */
 static PyObject *__pyx_collections_abc_Sequence = 0;
 static PyObject *generic = 0;
 static PyObject *strided = 0;
@@ -3329,11 +3335,11 @@ static PyObject *contiguous = 0;
 static PyObject *indirect_contiguous = 0;
 static int __pyx_memoryview_thread_locks_used;
 static PyThread_type_lock __pyx_memoryview_thread_locks[8];
-static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *, float *); /*proto*/
-static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *, int *); /*proto*/
-static int __pyx_f_8parallel_11cython_topk_partition(float *, int *, int, int, int); /*proto*/
-static void __pyx_f_8parallel_11cython_topk_quickselect(float *, int *, int, int, int); /*proto*/
-static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayObject *, int, int __pyx_skip_dispatch); /*proto*/
+static CYTHON_INLINE void __pyx_f_3src_8parallel_11cython_topk_swap_f(float *, float *); /*proto*/
+static CYTHON_INLINE void __pyx_f_3src_8parallel_11cython_topk_swap_i(int *, int *); /*proto*/
+static int __pyx_f_3src_8parallel_11cython_topk_partition(float *, int *, int, int, int); /*proto*/
+static void __pyx_f_3src_8parallel_11cython_topk_quickselect(float *, int *, int, int, int); /*proto*/
+static PyArrayObject *__pyx_f_3src_8parallel_11cython_topk_greedy_topk_fast(PyArrayObject *, int, int __pyx_skip_dispatch); /*proto*/
 static int __pyx_array_allocate_buffer(struct __pyx_array_obj *); /*proto*/
 static struct __pyx_array_obj *__pyx_array_new(PyObject *, Py_ssize_t, char *, char const *, char *); /*proto*/
 static PyObject *__pyx_memoryview_new(PyObject *, int, int, __Pyx_TypeInfo const *); /*proto*/
@@ -3369,16 +3375,16 @@ static void __pyx_memoryview_slice_assign_scalar(__Pyx_memviewslice *, int, size
 static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize_t *, int, size_t, void *); /*proto*/
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 /* #### Code section: typeinfo ### */
-static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_F32 = { "F32", NULL, sizeof(__pyx_t_8parallel_11cython_topk_F32), { 0 }, 0, 'R', 0, 0 };
-static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_I32 = { "I32", NULL, sizeof(__pyx_t_8parallel_11cython_topk_I32), { 0 }, 0, __PYX_IS_UNSIGNED(__pyx_t_8parallel_11cython_topk_I32) ? 'U' : 'I', __PYX_IS_UNSIGNED(__pyx_t_8parallel_11cython_topk_I32), 0 };
+static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_F32 = { "F32", NULL, sizeof(__pyx_t_3src_8parallel_11cython_topk_F32), { 0 }, 0, 'R', 0, 0 };
+static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_I32 = { "I32", NULL, sizeof(__pyx_t_3src_8parallel_11cython_topk_I32), { 0 }, 0, __PYX_IS_UNSIGNED(__pyx_t_3src_8parallel_11cython_topk_I32) ? 'U' : 'I', __PYX_IS_UNSIGNED(__pyx_t_3src_8parallel_11cython_topk_I32), 0 };
 static const __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
 static const __Pyx_TypeInfo __Pyx_TypeInfo_int = { "int", NULL, sizeof(int), { 0 }, 0, __PYX_IS_UNSIGNED(int) ? 'U' : 'I', __PYX_IS_UNSIGNED(int), 0 };
 /* #### Code section: before_global_var ### */
-#define __Pyx_MODULE_NAME "parallel.cython_topk"
-extern int __pyx_module_is_main_parallel__cython_topk;
-int __pyx_module_is_main_parallel__cython_topk = 0;
+#define __Pyx_MODULE_NAME "src.parallel.cython_topk"
+extern int __pyx_module_is_main_src__parallel__cython_topk;
+int __pyx_module_is_main_src__parallel__cython_topk = 0;
 
-/* Implementation of "parallel.cython_topk" */
+/* Implementation of "src.parallel.cython_topk" */
 /* #### Code section: global_var ### */
 static PyObject *__pyx_builtin___import__;
 static PyObject *__pyx_builtin_enumerate;
@@ -3430,7 +3436,7 @@ static void __pyx_memoryviewslice___pyx_pf_15View_dot_MemoryView_16_memoryviewsl
 static PyObject *__pyx_pf___pyx_memoryviewslice___reduce_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf___pyx_memoryviewslice_2__setstate_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_15View_dot_MemoryView___pyx_unpickle_Enum(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_logits, int __pyx_v_k); /* proto */
+static PyObject *__pyx_pf_3src_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_logits, int __pyx_v_k); /* proto */
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_memoryview(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -3622,24 +3628,24 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #define __pyx_n_u_numpy __pyx_string_tab[92]
 #define __pyx_n_u_obj __pyx_string_tab[93]
 #define __pyx_n_u_pack __pyx_string_tab[94]
-#define __pyx_n_u_parallel_cython_topk __pyx_string_tab[95]
-#define __pyx_n_u_pop __pyx_string_tab[96]
-#define __pyx_n_u_pyx_checksum __pyx_string_tab[97]
-#define __pyx_n_u_pyx_state __pyx_string_tab[98]
-#define __pyx_n_u_pyx_type __pyx_string_tab[99]
-#define __pyx_n_u_pyx_unpickle_Enum __pyx_string_tab[100]
-#define __pyx_n_u_pyx_vtable __pyx_string_tab[101]
-#define __pyx_n_u_qualname __pyx_string_tab[102]
-#define __pyx_n_u_reduce __pyx_string_tab[103]
-#define __pyx_n_u_reduce_cython __pyx_string_tab[104]
-#define __pyx_n_u_reduce_ex __pyx_string_tab[105]
-#define __pyx_n_u_register __pyx_string_tab[106]
-#define __pyx_n_u_set_name __pyx_string_tab[107]
-#define __pyx_n_u_setdefault __pyx_string_tab[108]
-#define __pyx_n_u_setstate __pyx_string_tab[109]
-#define __pyx_n_u_setstate_cython __pyx_string_tab[110]
-#define __pyx_n_u_shape __pyx_string_tab[111]
-#define __pyx_n_u_size __pyx_string_tab[112]
+#define __pyx_n_u_pop __pyx_string_tab[95]
+#define __pyx_n_u_pyx_checksum __pyx_string_tab[96]
+#define __pyx_n_u_pyx_state __pyx_string_tab[97]
+#define __pyx_n_u_pyx_type __pyx_string_tab[98]
+#define __pyx_n_u_pyx_unpickle_Enum __pyx_string_tab[99]
+#define __pyx_n_u_pyx_vtable __pyx_string_tab[100]
+#define __pyx_n_u_qualname __pyx_string_tab[101]
+#define __pyx_n_u_reduce __pyx_string_tab[102]
+#define __pyx_n_u_reduce_cython __pyx_string_tab[103]
+#define __pyx_n_u_reduce_ex __pyx_string_tab[104]
+#define __pyx_n_u_register __pyx_string_tab[105]
+#define __pyx_n_u_set_name __pyx_string_tab[106]
+#define __pyx_n_u_setdefault __pyx_string_tab[107]
+#define __pyx_n_u_setstate __pyx_string_tab[108]
+#define __pyx_n_u_setstate_cython __pyx_string_tab[109]
+#define __pyx_n_u_shape __pyx_string_tab[110]
+#define __pyx_n_u_size __pyx_string_tab[111]
+#define __pyx_n_u_src_parallel_cython_topk __pyx_string_tab[112]
 #define __pyx_n_u_start __pyx_string_tab[113]
 #define __pyx_n_u_step __pyx_string_tab[114]
 #define __pyx_n_u_stop __pyx_string_tab[115]
@@ -18749,7 +18755,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   return __pyx_r;
 }
 
-/* "parallel/cython_topk.pyx":14
+/* "src/parallel/cython_topk.pyx":14
  * 
  * 
  * cdef inline void swap_f(float* a, float* b):             # <<<<<<<<<<<<<<
@@ -18757,10 +18763,10 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
  *     a[0] = b[0]
 */
 
-static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_a, float *__pyx_v_b) {
+static CYTHON_INLINE void __pyx_f_3src_8parallel_11cython_topk_swap_f(float *__pyx_v_a, float *__pyx_v_b) {
   float __pyx_v_tmp;
 
-  /* "parallel/cython_topk.pyx":15
+  /* "src/parallel/cython_topk.pyx":15
  * 
  * cdef inline void swap_f(float* a, float* b):
  *     cdef float tmp = a[0]             # <<<<<<<<<<<<<<
@@ -18769,7 +18775,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_
 */
   __pyx_v_tmp = (__pyx_v_a[0]);
 
-  /* "parallel/cython_topk.pyx":16
+  /* "src/parallel/cython_topk.pyx":16
  * cdef inline void swap_f(float* a, float* b):
  *     cdef float tmp = a[0]
  *     a[0] = b[0]             # <<<<<<<<<<<<<<
@@ -18778,7 +18784,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_
 */
   (__pyx_v_a[0]) = (__pyx_v_b[0]);
 
-  /* "parallel/cython_topk.pyx":17
+  /* "src/parallel/cython_topk.pyx":17
  *     cdef float tmp = a[0]
  *     a[0] = b[0]
  *     b[0] = tmp             # <<<<<<<<<<<<<<
@@ -18787,7 +18793,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_
 */
   (__pyx_v_b[0]) = __pyx_v_tmp;
 
-  /* "parallel/cython_topk.pyx":14
+  /* "src/parallel/cython_topk.pyx":14
  * 
  * 
  * cdef inline void swap_f(float* a, float* b):             # <<<<<<<<<<<<<<
@@ -18798,7 +18804,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_
   /* function exit code */
 }
 
-/* "parallel/cython_topk.pyx":20
+/* "src/parallel/cython_topk.pyx":20
  * 
  * 
  * cdef inline void swap_i(int* a, int* b):             # <<<<<<<<<<<<<<
@@ -18806,10 +18812,10 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_f(float *__pyx_v_
  *     a[0] = b[0]
 */
 
-static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a, int *__pyx_v_b) {
+static CYTHON_INLINE void __pyx_f_3src_8parallel_11cython_topk_swap_i(int *__pyx_v_a, int *__pyx_v_b) {
   int __pyx_v_tmp;
 
-  /* "parallel/cython_topk.pyx":21
+  /* "src/parallel/cython_topk.pyx":21
  * 
  * cdef inline void swap_i(int* a, int* b):
  *     cdef int tmp = a[0]             # <<<<<<<<<<<<<<
@@ -18818,7 +18824,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a,
 */
   __pyx_v_tmp = (__pyx_v_a[0]);
 
-  /* "parallel/cython_topk.pyx":22
+  /* "src/parallel/cython_topk.pyx":22
  * cdef inline void swap_i(int* a, int* b):
  *     cdef int tmp = a[0]
  *     a[0] = b[0]             # <<<<<<<<<<<<<<
@@ -18827,7 +18833,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a,
 */
   (__pyx_v_a[0]) = (__pyx_v_b[0]);
 
-  /* "parallel/cython_topk.pyx":23
+  /* "src/parallel/cython_topk.pyx":23
  *     cdef int tmp = a[0]
  *     a[0] = b[0]
  *     b[0] = tmp             # <<<<<<<<<<<<<<
@@ -18836,7 +18842,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a,
 */
   (__pyx_v_b[0]) = __pyx_v_tmp;
 
-  /* "parallel/cython_topk.pyx":20
+  /* "src/parallel/cython_topk.pyx":20
  * 
  * 
  * cdef inline void swap_i(int* a, int* b):             # <<<<<<<<<<<<<<
@@ -18847,7 +18853,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a,
   /* function exit code */
 }
 
-/* "parallel/cython_topk.pyx":26
+/* "src/parallel/cython_topk.pyx":26
  * 
  * 
  * cdef int partition(float* arr, int* idx, int left, int right, int pivot):             # <<<<<<<<<<<<<<
@@ -18855,7 +18861,7 @@ static CYTHON_INLINE void __pyx_f_8parallel_11cython_topk_swap_i(int *__pyx_v_a,
  *     cdef float pivot_val = arr[pivot]
 */
 
-static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__pyx_v_idx, int __pyx_v_left, int __pyx_v_right, int __pyx_v_pivot) {
+static int __pyx_f_3src_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__pyx_v_idx, int __pyx_v_left, int __pyx_v_right, int __pyx_v_pivot) {
   float __pyx_v_pivot_val;
   int __pyx_v_store;
   int __pyx_v_i;
@@ -18868,7 +18874,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "parallel/cython_topk.pyx":28
+  /* "src/parallel/cython_topk.pyx":28
  * cdef int partition(float* arr, int* idx, int left, int right, int pivot):
  * 
  *     cdef float pivot_val = arr[pivot]             # <<<<<<<<<<<<<<
@@ -18877,25 +18883,25 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
 */
   __pyx_v_pivot_val = (__pyx_v_arr[__pyx_v_pivot]);
 
-  /* "parallel/cython_topk.pyx":30
+  /* "src/parallel/cython_topk.pyx":30
  *     cdef float pivot_val = arr[pivot]
  * 
  *     swap_f(&arr[pivot], &arr[right])             # <<<<<<<<<<<<<<
  *     swap_i(&idx[pivot], &idx[right])
  * 
 */
-  __pyx_f_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_pivot])), (&(__pyx_v_arr[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_f_3src_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_pivot])), (&(__pyx_v_arr[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 30, __pyx_L1_error)
 
-  /* "parallel/cython_topk.pyx":31
+  /* "src/parallel/cython_topk.pyx":31
  * 
  *     swap_f(&arr[pivot], &arr[right])
  *     swap_i(&idx[pivot], &idx[right])             # <<<<<<<<<<<<<<
  * 
  *     cdef int store = left
 */
-  __pyx_f_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_pivot])), (&(__pyx_v_idx[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_f_3src_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_pivot])), (&(__pyx_v_idx[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L1_error)
 
-  /* "parallel/cython_topk.pyx":33
+  /* "src/parallel/cython_topk.pyx":33
  *     swap_i(&idx[pivot], &idx[right])
  * 
  *     cdef int store = left             # <<<<<<<<<<<<<<
@@ -18904,7 +18910,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
 */
   __pyx_v_store = __pyx_v_left;
 
-  /* "parallel/cython_topk.pyx":36
+  /* "src/parallel/cython_topk.pyx":36
  *     cdef int i
  * 
  *     for i in range(left, right):             # <<<<<<<<<<<<<<
@@ -18916,7 +18922,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
   for (__pyx_t_3 = __pyx_v_left; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "parallel/cython_topk.pyx":37
+    /* "src/parallel/cython_topk.pyx":37
  * 
  *     for i in range(left, right):
  *         if arr[i] > pivot_val:             # <<<<<<<<<<<<<<
@@ -18926,25 +18932,25 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
     __pyx_t_4 = ((__pyx_v_arr[__pyx_v_i]) > __pyx_v_pivot_val);
     if (__pyx_t_4) {
 
-      /* "parallel/cython_topk.pyx":38
+      /* "src/parallel/cython_topk.pyx":38
  *     for i in range(left, right):
  *         if arr[i] > pivot_val:
  *             swap_f(&arr[i], &arr[store])             # <<<<<<<<<<<<<<
  *             swap_i(&idx[i], &idx[store])
  *             store += 1
 */
-      __pyx_f_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_i])), (&(__pyx_v_arr[__pyx_v_store]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 38, __pyx_L1_error)
+      __pyx_f_3src_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_i])), (&(__pyx_v_arr[__pyx_v_store]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 38, __pyx_L1_error)
 
-      /* "parallel/cython_topk.pyx":39
+      /* "src/parallel/cython_topk.pyx":39
  *         if arr[i] > pivot_val:
  *             swap_f(&arr[i], &arr[store])
  *             swap_i(&idx[i], &idx[store])             # <<<<<<<<<<<<<<
  *             store += 1
  * 
 */
-      __pyx_f_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_i])), (&(__pyx_v_idx[__pyx_v_store]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 39, __pyx_L1_error)
+      __pyx_f_3src_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_i])), (&(__pyx_v_idx[__pyx_v_store]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 39, __pyx_L1_error)
 
-      /* "parallel/cython_topk.pyx":40
+      /* "src/parallel/cython_topk.pyx":40
  *             swap_f(&arr[i], &arr[store])
  *             swap_i(&idx[i], &idx[store])
  *             store += 1             # <<<<<<<<<<<<<<
@@ -18953,7 +18959,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
 */
       __pyx_v_store = (__pyx_v_store + 1);
 
-      /* "parallel/cython_topk.pyx":37
+      /* "src/parallel/cython_topk.pyx":37
  * 
  *     for i in range(left, right):
  *         if arr[i] > pivot_val:             # <<<<<<<<<<<<<<
@@ -18963,25 +18969,25 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
     }
   }
 
-  /* "parallel/cython_topk.pyx":42
+  /* "src/parallel/cython_topk.pyx":42
  *             store += 1
  * 
  *     swap_f(&arr[store], &arr[right])             # <<<<<<<<<<<<<<
  *     swap_i(&idx[store], &idx[right])
  * 
 */
-  __pyx_f_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_store])), (&(__pyx_v_arr[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_f_3src_8parallel_11cython_topk_swap_f((&(__pyx_v_arr[__pyx_v_store])), (&(__pyx_v_arr[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L1_error)
 
-  /* "parallel/cython_topk.pyx":43
+  /* "src/parallel/cython_topk.pyx":43
  * 
  *     swap_f(&arr[store], &arr[right])
  *     swap_i(&idx[store], &idx[right])             # <<<<<<<<<<<<<<
  * 
  *     return store
 */
-  __pyx_f_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_store])), (&(__pyx_v_idx[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_f_3src_8parallel_11cython_topk_swap_i((&(__pyx_v_idx[__pyx_v_store])), (&(__pyx_v_idx[__pyx_v_right]))); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 43, __pyx_L1_error)
 
-  /* "parallel/cython_topk.pyx":45
+  /* "src/parallel/cython_topk.pyx":45
  *     swap_i(&idx[store], &idx[right])
  * 
  *     return store             # <<<<<<<<<<<<<<
@@ -18991,7 +18997,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
   __pyx_r = __pyx_v_store;
   goto __pyx_L0;
 
-  /* "parallel/cython_topk.pyx":26
+  /* "src/parallel/cython_topk.pyx":26
  * 
  * 
  * cdef int partition(float* arr, int* idx, int left, int right, int pivot):             # <<<<<<<<<<<<<<
@@ -19001,13 +19007,13 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_AddTraceback("parallel.cython_topk.partition", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.parallel.cython_topk.partition", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   return __pyx_r;
 }
 
-/* "parallel/cython_topk.pyx":48
+/* "src/parallel/cython_topk.pyx":48
  * 
  * 
  * cdef void quickselect(float* arr, int* idx, int left, int right, int k):             # <<<<<<<<<<<<<<
@@ -19015,7 +19021,7 @@ static int __pyx_f_8parallel_11cython_topk_partition(float *__pyx_v_arr, int *__
  * 
 */
 
-static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int *__pyx_v_idx, int __pyx_v_left, int __pyx_v_right, int __pyx_v_k) {
+static void __pyx_f_3src_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int *__pyx_v_idx, int __pyx_v_left, int __pyx_v_right, int __pyx_v_k) {
   int __pyx_v_pivot;
   int __pyx_v_pos;
   int __pyx_t_1;
@@ -19024,7 +19030,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "parallel/cython_topk.pyx":51
+  /* "src/parallel/cython_topk.pyx":51
  *     cdef int pivot, pos
  * 
  *     while left < right:             # <<<<<<<<<<<<<<
@@ -19035,7 +19041,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
     __pyx_t_1 = (__pyx_v_left < __pyx_v_right);
     if (!__pyx_t_1) break;
 
-    /* "parallel/cython_topk.pyx":52
+    /* "src/parallel/cython_topk.pyx":52
  * 
  *     while left < right:
  *         pivot = left + (rand() % (right - left + 1))             # <<<<<<<<<<<<<<
@@ -19044,17 +19050,17 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
 */
     __pyx_v_pivot = (__pyx_v_left + (rand() % ((__pyx_v_right - __pyx_v_left) + 1)));
 
-    /* "parallel/cython_topk.pyx":53
+    /* "src/parallel/cython_topk.pyx":53
  *     while left < right:
  *         pivot = left + (rand() % (right - left + 1))
  *         pos = partition(arr, idx, left, right, pivot)             # <<<<<<<<<<<<<<
  * 
  *         if pos == k:
 */
-    __pyx_t_2 = __pyx_f_8parallel_11cython_topk_partition(__pyx_v_arr, __pyx_v_idx, __pyx_v_left, __pyx_v_right, __pyx_v_pivot); if (unlikely(__pyx_t_2 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 53, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_3src_8parallel_11cython_topk_partition(__pyx_v_arr, __pyx_v_idx, __pyx_v_left, __pyx_v_right, __pyx_v_pivot); if (unlikely(__pyx_t_2 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 53, __pyx_L1_error)
     __pyx_v_pos = __pyx_t_2;
 
-    /* "parallel/cython_topk.pyx":55
+    /* "src/parallel/cython_topk.pyx":55
  *         pos = partition(arr, idx, left, right, pivot)
  * 
  *         if pos == k:             # <<<<<<<<<<<<<<
@@ -19064,7 +19070,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
     __pyx_t_1 = (__pyx_v_pos == __pyx_v_k);
     if (__pyx_t_1) {
 
-      /* "parallel/cython_topk.pyx":56
+      /* "src/parallel/cython_topk.pyx":56
  * 
  *         if pos == k:
  *             return             # <<<<<<<<<<<<<<
@@ -19073,7 +19079,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
 */
       goto __pyx_L0;
 
-      /* "parallel/cython_topk.pyx":55
+      /* "src/parallel/cython_topk.pyx":55
  *         pos = partition(arr, idx, left, right, pivot)
  * 
  *         if pos == k:             # <<<<<<<<<<<<<<
@@ -19082,7 +19088,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
 */
     }
 
-    /* "parallel/cython_topk.pyx":57
+    /* "src/parallel/cython_topk.pyx":57
  *         if pos == k:
  *             return
  *         elif pos > k:             # <<<<<<<<<<<<<<
@@ -19092,7 +19098,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
     __pyx_t_1 = (__pyx_v_pos > __pyx_v_k);
     if (__pyx_t_1) {
 
-      /* "parallel/cython_topk.pyx":58
+      /* "src/parallel/cython_topk.pyx":58
  *             return
  *         elif pos > k:
  *             right = pos - 1             # <<<<<<<<<<<<<<
@@ -19101,7 +19107,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
 */
       __pyx_v_right = (__pyx_v_pos - 1);
 
-      /* "parallel/cython_topk.pyx":57
+      /* "src/parallel/cython_topk.pyx":57
  *         if pos == k:
  *             return
  *         elif pos > k:             # <<<<<<<<<<<<<<
@@ -19111,7 +19117,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
       goto __pyx_L5;
     }
 
-    /* "parallel/cython_topk.pyx":60
+    /* "src/parallel/cython_topk.pyx":60
  *             right = pos - 1
  *         else:
  *             left = pos + 1             # <<<<<<<<<<<<<<
@@ -19124,7 +19130,7 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
     __pyx_L5:;
   }
 
-  /* "parallel/cython_topk.pyx":48
+  /* "src/parallel/cython_topk.pyx":48
  * 
  * 
  * cdef void quickselect(float* arr, int* idx, int left, int right, int k):             # <<<<<<<<<<<<<<
@@ -19135,11 +19141,11 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("parallel.cython_topk.quickselect", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.parallel.cython_topk.quickselect", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_L0:;
 }
 
-/* "parallel/cython_topk.pyx":63
+/* "src/parallel/cython_topk.pyx":63
  * 
  * 
  * cpdef np.ndarray[I32, ndim=2] greedy_topk_fast(             # <<<<<<<<<<<<<<
@@ -19147,14 +19153,14 @@ static void __pyx_f_8parallel_11cython_topk_quickselect(float *__pyx_v_arr, int 
  *     int k
 */
 
-static PyObject *__pyx_pw_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_3src_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayObject *__pyx_v_logits, int __pyx_v_k, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static PyArrayObject *__pyx_f_3src_8parallel_11cython_topk_greedy_topk_fast(PyArrayObject *__pyx_v_logits, int __pyx_v_k, CYTHON_UNUSED int __pyx_skip_dispatch) {
   int __pyx_v_B;
   int __pyx_v_N;
   PyArrayObject *__pyx_v_out = 0;
@@ -19210,11 +19216,11 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_pybuffernd_logits.rcbuffer = &__pyx_pybuffer_logits;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_logits.rcbuffer->pybuffer, (PyObject*)__pyx_v_logits, &__Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_F32, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 63, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_logits.rcbuffer->pybuffer, (PyObject*)__pyx_v_logits, &__Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_F32, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 63, __pyx_L1_error)
   }
   __pyx_pybuffernd_logits.diminfo[0].strides = __pyx_pybuffernd_logits.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_logits.diminfo[0].shape = __pyx_pybuffernd_logits.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_logits.diminfo[1].strides = __pyx_pybuffernd_logits.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_logits.diminfo[1].shape = __pyx_pybuffernd_logits.rcbuffer->pybuffer.shape[1];
 
-  /* "parallel/cython_topk.pyx":68
+  /* "src/parallel/cython_topk.pyx":68
  * ):
  * 
  *     cdef int B = logits.shape[0]             # <<<<<<<<<<<<<<
@@ -19223,7 +19229,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
 */
   __pyx_v_B = (__pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_logits))[0]);
 
-  /* "parallel/cython_topk.pyx":69
+  /* "src/parallel/cython_topk.pyx":69
  * 
  *     cdef int B = logits.shape[0]
  *     cdef int N = logits.shape[1]             # <<<<<<<<<<<<<<
@@ -19232,7 +19238,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
 */
   __pyx_v_N = (__pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_logits))[1]);
 
-  /* "parallel/cython_topk.pyx":71
+  /* "src/parallel/cython_topk.pyx":71
  *     cdef int N = logits.shape[1]
  * 
  *     cdef np.ndarray[I32, ndim=2] out = np.empty((B, k), dtype=np.int32)             # <<<<<<<<<<<<<<
@@ -19291,7 +19297,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 71, __pyx_L1_error)
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_out.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_I32, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_out.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_I32, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_out = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_out.rcbuffer->pybuffer.buf = NULL;
       __PYX_ERR(0, 71, __pyx_L1_error)
     } else {__pyx_pybuffernd_out.diminfo[0].strides = __pyx_pybuffernd_out.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_out.diminfo[0].shape = __pyx_pybuffernd_out.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_out.diminfo[1].strides = __pyx_pybuffernd_out.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_out.diminfo[1].shape = __pyx_pybuffernd_out.rcbuffer->pybuffer.shape[1];
@@ -19300,7 +19306,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_v_out = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "parallel/cython_topk.pyx":72
+  /* "src/parallel/cython_topk.pyx":72
  * 
  *     cdef np.ndarray[I32, ndim=2] out = np.empty((B, k), dtype=np.int32)
  *     cdef np.ndarray[I32, ndim=1] idx_row = np.empty(N, dtype=np.int32)             # <<<<<<<<<<<<<<
@@ -19349,7 +19355,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 72, __pyx_L1_error)
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_idx_row.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_I32, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_idx_row.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_I32, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_idx_row = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_idx_row.rcbuffer->pybuffer.buf = NULL;
       __PYX_ERR(0, 72, __pyx_L1_error)
     } else {__pyx_pybuffernd_idx_row.diminfo[0].strides = __pyx_pybuffernd_idx_row.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_idx_row.diminfo[0].shape = __pyx_pybuffernd_idx_row.rcbuffer->pybuffer.shape[0];
@@ -19358,7 +19364,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_v_idx_row = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "parallel/cython_topk.pyx":77
+  /* "src/parallel/cython_topk.pyx":77
  *     cdef int* idx_ptr
  * 
  *     cdef float[:, :] logits_mv = logits             # <<<<<<<<<<<<<<
@@ -19370,7 +19376,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_t_8.memview = NULL;
   __pyx_t_8.data = NULL;
 
-  /* "parallel/cython_topk.pyx":78
+  /* "src/parallel/cython_topk.pyx":78
  * 
  *     cdef float[:, :] logits_mv = logits
  *     cdef int[:, :] out_mv = out             # <<<<<<<<<<<<<<
@@ -19382,7 +19388,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_t_9.memview = NULL;
   __pyx_t_9.data = NULL;
 
-  /* "parallel/cython_topk.pyx":79
+  /* "src/parallel/cython_topk.pyx":79
  *     cdef float[:, :] logits_mv = logits
  *     cdef int[:, :] out_mv = out
  *     cdef int[:] idx_mv = idx_row             # <<<<<<<<<<<<<<
@@ -19394,7 +19400,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_t_10.memview = NULL;
   __pyx_t_10.data = NULL;
 
-  /* "parallel/cython_topk.pyx":83
+  /* "src/parallel/cython_topk.pyx":83
  *     cdef int i, j
  * 
  *     for j in range(N):             # <<<<<<<<<<<<<<
@@ -19406,7 +19412,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
     __pyx_v_j = __pyx_t_13;
 
-    /* "parallel/cython_topk.pyx":84
+    /* "src/parallel/cython_topk.pyx":84
  * 
  *     for j in range(N):
  *         idx_row[j] = j             # <<<<<<<<<<<<<<
@@ -19414,10 +19420,10 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
  *     for i in range(B):
 */
     __pyx_t_14 = __pyx_v_j;
-    *__Pyx_BufPtrStrided1d(__pyx_t_8parallel_11cython_topk_I32 *, __pyx_pybuffernd_idx_row.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_idx_row.diminfo[0].strides) = __pyx_v_j;
+    *__Pyx_BufPtrStrided1d(__pyx_t_3src_8parallel_11cython_topk_I32 *, __pyx_pybuffernd_idx_row.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_idx_row.diminfo[0].strides) = __pyx_v_j;
   }
 
-  /* "parallel/cython_topk.pyx":86
+  /* "src/parallel/cython_topk.pyx":86
  *         idx_row[j] = j
  * 
  *     for i in range(B):             # <<<<<<<<<<<<<<
@@ -19429,7 +19435,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
     __pyx_v_i = __pyx_t_13;
 
-    /* "parallel/cython_topk.pyx":88
+    /* "src/parallel/cython_topk.pyx":88
  *     for i in range(B):
  * 
  *         arr_ptr = &logits_mv[i, 0]             # <<<<<<<<<<<<<<
@@ -19440,7 +19446,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
     __pyx_t_15 = 0;
     __pyx_v_arr_ptr = (&(*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_logits_mv.data + __pyx_t_14 * __pyx_v_logits_mv.strides[0]) ) + __pyx_t_15 * __pyx_v_logits_mv.strides[1]) ))));
 
-    /* "parallel/cython_topk.pyx":89
+    /* "src/parallel/cython_topk.pyx":89
  * 
  *         arr_ptr = &logits_mv[i, 0]
  *         idx_ptr = &idx_mv[0]             # <<<<<<<<<<<<<<
@@ -19450,16 +19456,16 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
     __pyx_t_15 = 0;
     __pyx_v_idx_ptr = (&(*((int *) ( /* dim=0 */ (__pyx_v_idx_mv.data + __pyx_t_15 * __pyx_v_idx_mv.strides[0]) ))));
 
-    /* "parallel/cython_topk.pyx":91
+    /* "src/parallel/cython_topk.pyx":91
  *         idx_ptr = &idx_mv[0]
  * 
  *         quickselect(arr_ptr, idx_ptr, 0, N - 1, k)             # <<<<<<<<<<<<<<
  * 
  *         for j in range(k):
 */
-    __pyx_f_8parallel_11cython_topk_quickselect(__pyx_v_arr_ptr, __pyx_v_idx_ptr, 0, (__pyx_v_N - 1), __pyx_v_k); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L1_error)
+    __pyx_f_3src_8parallel_11cython_topk_quickselect(__pyx_v_arr_ptr, __pyx_v_idx_ptr, 0, (__pyx_v_N - 1), __pyx_v_k); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L1_error)
 
-    /* "parallel/cython_topk.pyx":93
+    /* "src/parallel/cython_topk.pyx":93
  *         quickselect(arr_ptr, idx_ptr, 0, N - 1, k)
  * 
  *         for j in range(k):             # <<<<<<<<<<<<<<
@@ -19471,7 +19477,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
     for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
       __pyx_v_j = __pyx_t_18;
 
-      /* "parallel/cython_topk.pyx":94
+      /* "src/parallel/cython_topk.pyx":94
  * 
  *         for j in range(k):
  *             out_mv[i, j] = idx_ptr[j]             # <<<<<<<<<<<<<<
@@ -19484,7 +19490,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
     }
   }
 
-  /* "parallel/cython_topk.pyx":96
+  /* "src/parallel/cython_topk.pyx":96
  *             out_mv[i, j] = idx_ptr[j]
  * 
  *     return out             # <<<<<<<<<<<<<<
@@ -19494,7 +19500,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
   __pyx_r = ((PyArrayObject *)__pyx_v_out);
   goto __pyx_L0;
 
-  /* "parallel/cython_topk.pyx":63
+  /* "src/parallel/cython_topk.pyx":63
  * 
  * 
  * cpdef np.ndarray[I32, ndim=2] greedy_topk_fast(             # <<<<<<<<<<<<<<
@@ -19521,7 +19527,7 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_logits.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_out.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   goto __pyx_L2;
   __pyx_L0:;
@@ -19540,15 +19546,15 @@ static PyArrayObject *__pyx_f_8parallel_11cython_topk_greedy_topk_fast(PyArrayOb
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_3src_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_8parallel_11cython_topk_1greedy_topk_fast = {"greedy_topk_fast", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_8parallel_11cython_topk_1greedy_topk_fast, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
+static PyMethodDef __pyx_mdef_3src_8parallel_11cython_topk_1greedy_topk_fast = {"greedy_topk_fast", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_8parallel_11cython_topk_1greedy_topk_fast, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_8parallel_11cython_topk_1greedy_topk_fast(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -19618,12 +19624,12 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_logits), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "logits", 0))) __PYX_ERR(0, 64, __pyx_L1_error)
-  __pyx_r = __pyx_pf_8parallel_11cython_topk_greedy_topk_fast(__pyx_self, __pyx_v_logits, __pyx_v_k);
+  __pyx_r = __pyx_pf_3src_8parallel_11cython_topk_greedy_topk_fast(__pyx_self, __pyx_v_logits, __pyx_v_k);
 
   /* function exit code */
   goto __pyx_L0;
@@ -19642,7 +19648,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_logits, int __pyx_v_k) {
+static PyObject *__pyx_pf_3src_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_logits, int __pyx_v_k) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_logits;
   __Pyx_Buffer __pyx_pybuffer_logits;
   PyObject *__pyx_r = NULL;
@@ -19658,11 +19664,11 @@ static PyObject *__pyx_pf_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED
   __pyx_pybuffernd_logits.rcbuffer = &__pyx_pybuffer_logits;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_logits.rcbuffer->pybuffer, (PyObject*)__pyx_v_logits, &__Pyx_TypeInfo_nn___pyx_t_8parallel_11cython_topk_F32, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 63, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_logits.rcbuffer->pybuffer, (PyObject*)__pyx_v_logits, &__Pyx_TypeInfo_nn___pyx_t_3src_8parallel_11cython_topk_F32, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 63, __pyx_L1_error)
   }
   __pyx_pybuffernd_logits.diminfo[0].strides = __pyx_pybuffernd_logits.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_logits.diminfo[0].shape = __pyx_pybuffernd_logits.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_logits.diminfo[1].strides = __pyx_pybuffernd_logits.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_logits.diminfo[1].shape = __pyx_pybuffernd_logits.rcbuffer->pybuffer.shape[1];
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = ((PyObject *)__pyx_f_8parallel_11cython_topk_greedy_topk_fast(__pyx_v_logits, __pyx_v_k, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_3src_8parallel_11cython_topk_greedy_topk_fast(__pyx_v_logits, __pyx_v_k, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -19677,7 +19683,7 @@ static PyObject *__pyx_pf_8parallel_11cython_topk_greedy_topk_fast(CYTHON_UNUSED
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_logits.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.parallel.cython_topk.greedy_topk_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -19814,7 +19820,7 @@ static PyType_Slot __pyx_type___pyx_array_slots[] = {
   {0, 0},
 };
 static PyType_Spec __pyx_type___pyx_array_spec = {
-  "parallel.cython_topk.array",
+  "src.parallel.cython_topk.array",
   sizeof(struct __pyx_array_obj),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_SEQUENCE,
@@ -19848,7 +19854,7 @@ static PyBufferProcs __pyx_tp_as_buffer_array = {
 
 static PyTypeObject __pyx_type___pyx_array = {
   PyVarObject_HEAD_INIT(0, 0)
-  "parallel.cython_topk.""array", /*tp_name*/
+  "src.parallel.cython_topk.""array", /*tp_name*/
   sizeof(struct __pyx_array_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_array, /*tp_dealloc*/
@@ -19993,7 +19999,7 @@ static PyType_Slot __pyx_type___pyx_MemviewEnum_slots[] = {
   {0, 0},
 };
 static PyType_Spec __pyx_type___pyx_MemviewEnum_spec = {
-  "parallel.cython_topk.Enum",
+  "src.parallel.cython_topk.Enum",
   sizeof(struct __pyx_MemviewEnum_obj),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC,
@@ -20003,7 +20009,7 @@ static PyType_Spec __pyx_type___pyx_MemviewEnum_spec = {
 
 static PyTypeObject __pyx_type___pyx_MemviewEnum = {
   PyVarObject_HEAD_INIT(0, 0)
-  "parallel.cython_topk.""Enum", /*tp_name*/
+  "src.parallel.cython_topk.""Enum", /*tp_name*/
   sizeof(struct __pyx_MemviewEnum_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_Enum, /*tp_dealloc*/
@@ -20270,7 +20276,7 @@ static PyType_Slot __pyx_type___pyx_memoryview_slots[] = {
   {0, 0},
 };
 static PyType_Spec __pyx_type___pyx_memoryview_spec = {
-  "parallel.cython_topk.memoryview",
+  "src.parallel.cython_topk.memoryview",
   sizeof(struct __pyx_memoryview_obj),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC,
@@ -20304,7 +20310,7 @@ static PyBufferProcs __pyx_tp_as_buffer_memoryview = {
 
 static PyTypeObject __pyx_type___pyx_memoryview = {
   PyVarObject_HEAD_INIT(0, 0)
-  "parallel.cython_topk.""memoryview", /*tp_name*/
+  "src.parallel.cython_topk.""memoryview", /*tp_name*/
   sizeof(struct __pyx_memoryview_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_memoryview, /*tp_dealloc*/
@@ -20447,7 +20453,7 @@ static PyType_Slot __pyx_type___pyx_memoryviewslice_slots[] = {
   {0, 0},
 };
 static PyType_Spec __pyx_type___pyx_memoryviewslice_spec = {
-  "parallel.cython_topk._memoryviewslice",
+  "src.parallel.cython_topk._memoryviewslice",
   sizeof(struct __pyx_memoryviewslice_obj),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC|Py_TPFLAGS_SEQUENCE,
@@ -20457,7 +20463,7 @@ static PyType_Spec __pyx_type___pyx_memoryviewslice_spec = {
 
 static PyTypeObject __pyx_type___pyx_memoryviewslice = {
   PyVarObject_HEAD_INIT(0, 0)
-  "parallel.cython_topk.""_memoryviewslice", /*tp_name*/
+  "src.parallel.cython_topk.""_memoryviewslice", /*tp_name*/
   sizeof(struct __pyx_memoryviewslice_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc__memoryviewslice, /*tp_dealloc*/
@@ -21163,13 +21169,13 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
   if (__Pyx_InitConstants(__pyx_mstate) < (0)) __PYX_ERR(0, 1, __pyx_L1_error)
   stringtab_initialized = 1;
   if (__Pyx_InitGlobals() < (0)) __PYX_ERR(0, 1, __pyx_L1_error)
-  if (__pyx_module_is_main_parallel__cython_topk) {
+  if (__pyx_module_is_main_src__parallel__cython_topk) {
     if (PyObject_SetAttr(__pyx_m, __pyx_mstate_global->__pyx_n_u_name_2, __pyx_mstate_global->__pyx_n_u_main) < (0)) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "parallel.cython_topk")) {
-      if (unlikely((PyDict_SetItemString(modules, "parallel.cython_topk", __pyx_m) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "src.parallel.cython_topk")) {
+      if (unlikely((PyDict_SetItemString(modules, "src.parallel.cython_topk", __pyx_m) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   /*--- Builtin init code ---*/
@@ -21678,7 +21684,7 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
   if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_Enum, __pyx_t_4) < (0)) __PYX_ERR(1, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "parallel/cython_topk.pyx":6
+  /* "src/parallel/cython_topk.pyx":6
  * # cython: language_level=3
  * 
  * import numpy as np             # <<<<<<<<<<<<<<
@@ -21691,14 +21697,14 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
   if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_np, __pyx_t_4) < (0)) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "parallel/cython_topk.pyx":63
+  /* "src/parallel/cython_topk.pyx":63
  * 
  * 
  * cpdef np.ndarray[I32, ndim=2] greedy_topk_fast(             # <<<<<<<<<<<<<<
  *     np.ndarray[F32, ndim=2, mode="c"] logits,
  *     int k
 */
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_8parallel_11cython_topk_1greedy_topk_fast, 0, __pyx_mstate_global->__pyx_n_u_greedy_topk_fast, NULL, __pyx_mstate_global->__pyx_n_u_parallel_cython_topk, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_3src_8parallel_11cython_topk_1greedy_topk_fast, 0, __pyx_mstate_global->__pyx_n_u_greedy_topk_fast, NULL, __pyx_mstate_global->__pyx_n_u_src_parallel_cython_topk, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_4);
@@ -21706,7 +21712,7 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
   if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_greedy_topk_fast, __pyx_t_4) < (0)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "parallel/cython_topk.pyx":1
+  /* "src/parallel/cython_topk.pyx":1
  * # cython: boundscheck=False             # <<<<<<<<<<<<<<
  * # cython: wraparound=False
  * # cython: cdivision=True
@@ -21724,7 +21730,7 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
   __Pyx_XDECREF(__pyx_t_5);
   if (__pyx_m) {
     if (__pyx_mstate->__pyx_d && stringtab_initialized) {
-      __Pyx_AddTraceback("init parallel.cython_topk", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init src.parallel.cython_topk", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     #if !CYTHON_USE_MODULE_STATE
     Py_CLEAR(__pyx_m);
@@ -21738,7 +21744,7 @@ __Pyx_RefNannySetupContext("PyInit_cython_topk", 0);
     }
     #endif
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init parallel.cython_topk");
+    PyErr_SetString(PyExc_ImportError, "init src.parallel.cython_topk");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -21849,33 +21855,33 @@ static int __Pyx_InitCachedConstants(__pyx_mstatetype *__pyx_mstate) {
 static int __Pyx_InitConstants(__pyx_mstatetype *__pyx_mstate) {
   CYTHON_UNUSED_VAR(__pyx_mstate);
   {
-    const struct { const unsigned int length: 8; } index[] = {{2},{68},{35},{54},{37},{60},{24},{52},{26},{34},{29},{33},{45},{22},{15},{179},{37},{30},{32},{1},{1},{1},{1},{1},{8},{5},{6},{15},{23},{25},{7},{6},{2},{6},{35},{9},{30},{50},{39},{34},{8},{28},{20},{32},{22},{30},{37},{5},{8},{20},{8},{15},{3},{15},{18},{4},{1},{9},{17},{18},{5},{8},{5},{15},{5},{6},{9},{5},{5},{6},{7},{8},{12},{16},{2},{10},{5},{5},{13},{5},{8},{1},{6},{8},{7},{4},{10},{4},{8},{4},{7},{2},{5},{3},{4},{20},{3},{14},{11},{10},{19},{14},{12},{10},{17},{13},{8},{12},{10},{12},{19},{5},{4},{5},{4},{4},{6},{8},{6},{6},{6},{1},{186},{1}};
-    #if (CYTHON_COMPRESS_STRINGS) == 3 && __PYX_LIMITED_VERSION_HEX >= 0x030e0000 /* compression: zstd (1173 bytes) */
-const char* const cstring = "(\265/\375`D\007]$\000f?\277=0q\323\001\300P?\020\021A\300\017\035T\0040)S=\244p\351\023\231R\332-\323\3725\033\331I\344\304\241Y\263V\0202\377\373Ps,\364\361\250\332\350g\2414\236\372\2010\217E\001\235\000\245\000\242\000\230\266\017\037EEL\004\347\216BHo\035_&\245\227\037\037\246R\0105\352\267\371\212%|R\256\243\342\347R\272\361\254\236\232Bx\304\263\205\354\255\360/\271T\365\271y.\311\351Ai]F\237a\t\205\246\013\363}\266\206\3355\252\340\233v\312\346\364\370\242\206\277\037K\347|\335|&5\367u!\313\312\365\313V\020\337\306\360=\327\037\325Y\337\327\262d\231\223p%)\212h\313\330y\376\353l\255\331\266\263\25597\223\357q\312\366 5\315m\331B*\275\037{\357\304-\235\373H\017\001kYl\013\327\312wQ\245m\371\332B~\360\310}\301\336\234\277\367;\313\rB2\315:\267f\020\036,\243\321\263u\356\261\216\205|\315\375\327\2535\r\021\341\002\"\312\274i\237\363\341r\336\367\212\007\367\305\353\254tJj_\304\2271\355w\"ZwJb9|\3214\257~\374z\311_\317\336\315\273Rm\2673\276*%LF\336\374\216\243\257\273:\226\211\236\376l],\314\300!\003\005\024!(\262\237Un_\341f\330m\003\331\177&X\224\360\310\346\374\247\311\t\227K\302\227\027v\311\266\023\266\275)\033;\345t\0270|\363Zk5~WiUm\027\356\353\373Z\213u\224\326z\235\340\223\\\243N\202\017\302\235b\357\266\307zw9/\306m\255\357\370\330\010\323\3142\205\277\232\327\257f\255\265\330\272f|\233?>\370X\364\230u\345\272XF\243e\275\221dE\244U\361\2355\261\236\361\210N\205b-g\247\330\271\020\014\006D\344#\362H_[\356+{\261\271yt**\032\241\336\257\nn\235S\250T\005\006\035\304\346u\212\023;V)y\212\026>\266\242\212\232b\257\365\334\314\326J\247\314a\370\024\372ul\271\002':L\010TR:@\r@\033>\353\301P D\342QO\002O\210I\001K\212\006\212\310\201\023\006j\361\301x:<\010,)\r>\034\037\r!\r\220\310\347\343\323\341\200%\305RII\341\331\360\220\230\030\260\204:<\r<+L6L\004l\000\260\314\340\370,\250\204>>\014*!\016\220\003\222\030*bpP@P:PX\234\\8\221P\ti\310\310\304\010\020c\004\n\002\024x\242\340\004\202.\225\024\216JH?)>\034\217\002\317\201\r\000\003fh\300\350\370F\247\234}mT""\354\350\373\021\276w\352\341\257\257\005\367\2355\235u\032I\236\323!k\335\010c\252\343\024}\204\355\206QkQ\217\212(\252d'n\223\266\213kM\333\254\323Z\376\254yn$\200\261\250\021\235TH\031\231\221\021\221$IZ\014 \204 \244\252\314\003\2414N\221\tMJ\222\366\014\230\357\241\"\002M\342\006\276\364\363{\377\236\230/;u\311\237\334\215\262\257\350\220\324\225J\3152\240\243\370|\016\322\2062\360\363\354\306I\235\236\255\354\002\3120h\232w\304#\375:\226\367\020\323=\337\031B{\203\303\032\304\203{v\215\2621\220\312\340 `\352\244\225\3622D\022\032)BB!G\272M\223\221L\345eU\224\377\356(F\315\265`Z\244\016\200\244\377L\302\026\031\334\232`\336\263\001\206\211\272K\254\260*\030_\347\366\334#[\206\255\233\225\303\222x\262\377\2648\346\014\322\201\3407\336-+6a\2153\274\207\252\331\022_\177]\264\267\022b\350\303\361\316\236,\246T\016>\263\317FY@\243MT\330\225\323\227\242)\376\366\202\315(<n!++\326\330\212\352\020\201c\273V\254<\212\000\263\243\322z&\033N\230\207sb)\035@\221\024{t'\333\263i.\213\202\235\014\345\014tg\020\253[!\023\240\037\201D\016OkE;\0361<\2722\244\201i\370\323\332a\323\306T\267\236@\003cC\223/\252\252\222c\341\027\263:\030\035r7\037>\340D\276:\362\321\320\010\177$\036\341\266i2\367\007\260\036\324W\373K\311\332,\236\326\014\3756\214\033\223\322\\:j\2603\245\007\226\240\223\021\345J\203\373\252x\260\022O\225\006";
-    PyObject *data = __Pyx_DecompressString(cstring, 1173, 3);
+    const struct { const unsigned int length: 8; } index[] = {{2},{68},{35},{54},{37},{60},{24},{52},{26},{34},{29},{33},{45},{22},{15},{179},{37},{30},{32},{1},{1},{1},{1},{1},{8},{5},{6},{15},{23},{25},{7},{6},{2},{6},{35},{9},{30},{50},{39},{34},{8},{28},{20},{32},{22},{30},{37},{5},{8},{20},{8},{15},{3},{15},{18},{4},{1},{9},{17},{18},{5},{8},{5},{15},{5},{6},{9},{5},{5},{6},{7},{8},{12},{16},{2},{10},{5},{5},{13},{5},{8},{1},{6},{8},{7},{4},{10},{4},{8},{4},{7},{2},{5},{3},{4},{3},{14},{11},{10},{19},{14},{12},{10},{17},{13},{8},{12},{10},{12},{19},{5},{4},{24},{5},{4},{4},{6},{8},{6},{6},{6},{1},{186},{1}};
+    #if (CYTHON_COMPRESS_STRINGS) == 3 && __PYX_LIMITED_VERSION_HEX >= 0x030e0000 /* compression: zstd (1175 bytes) */
+const char* const cstring = "(\265/\375`H\007m$\000F?\27750s\332\300\020\0171\024D\300K\214\272\221\\@\210\023J1\264\222K\247-\214.\326RJ\2615\t\271s\360*n]\367\273\177\266o\254\347\222\377>\262\016\276\306\242\000\250\000\246\000\322\377\332m\313$\n<Qp\242\261\254\331b\235\331\376lI\034\274\027^\325\232\236\213}m\326N\267\374\355\0334\341\346~\323V\246\312G\277\023Wx\177\324\276q\337\246\237:\255\331\2339\305\340\317\253s!\241\337\266\337\26541\206\027w\255\346Z\327\3318\333\\\232_ml<\373\241\351\261\206\355\017\375\306\346h\265]a\nv9\357\343vl7\224c\267\262u|\236\372z\226e\024\351qR\334ok\313\n[:\312e\235\355X?\316ZK\211.\325)=\372\335\032W;qum\312\246\364\244E\0021K\277\357\365\323\0143\227mkF\223\214\264\357L,\361\374\352\217\362)':\226\034OYg\311H\304\340\365\321)\265\021\225\321\017\333\337\326'%4\241\030\225\\\230\325\374g\377\365\223\375Jc\257\357\330\332\034\324z\363\237\301\036#\254\366\345rL!\213\237\346\250T\347\306\375\253v>\034\365;\356\352\246\307p\223\356\265\263\345:#\365\205\353|:3v\214!\215X\306\215?\372\215\337\016\220\216\013\230\025\230\256\0379\352\017\257c\223\272L\361\267.5-#\375\266\324\026\243Q_\333\2438j\351\026.\255\326rRx\252\244u\276\367\236\234\217a\3668\351~\375\341\343\367^\2549{\357\241vm\206K\220f\327\336\353Z\256\356\322\306\352\376\360|q\312\367\276f\033q\"\304<\302\373\257\316\367^z\357\275\350\030b\330\353\374l\257\215\227\235\261r\030\276\210\301\313c\365\234\3433\231\313<\312]\336\307\251\202\342`\336\303\023o\223\322\025\022)e\346\344\302\027|(\333\037F\233\353\224#(n\273p6\373\017\203:\245\360\302\r#^\\bz\250em\322\t\263\236\332\345\327\306wq\233\226\353{?\353\214\3575\205\3634\357_T[\263\354\367</\032=\006\241\226\206\nB\365\221\362\216\343\200\225\323\301\216\241[\3519\020\265\002V3\n>Qe\223\"u\032\335\202\250\005\221JHy\260\002T3\251\223T\210\202\250%\n\265b:\201.\247\007A\304\322\350 :\232\036\201\036\002\001\000QPB\312!\304:I=\204X\t\252\210\234\037\231\237\323*e\245\261\252\361\331\360\251\010\261\002\200\260\237\201\037\225\325\302\352\3724""\370\\\325(\324J\010\261`*&u\352\032:\005\001\200\202\240\000\036\024\366L\341\311\037\312-\277\307\376\371\332\307\333\337\353z\307\357]\177<K(\2470\347\374\251\256<\2478qn5k\031\343D7\305\355\275\315n\333\246\343\032\2544\277\247y\235P{\017\377,Y\212\263\301\361\001\200\263\250Q\235DH\211\310\210\210H\222$-\006 \204 Se\346\001\2418.\221\tMJ\222\366\014\230\357\241B\024\002\255\001\363I\212\377\3757E\037\305\222u\363X7%\356\313\027\006\220\364q\366\006p\010\351F\030\364\025\265\367\321\334\330\014V\256]o\252\367\030\276\265vs{\343/\200n\220^\227\245\367`\\\252\274A\350\372\333 v\255$\033\010qLB}\3313G\257\214\357 \222\300H\271\027\036r\204m\nB\276\225\305\250(\253\273\277\0305\330\222ia%\000B\377\231x\267\010qk\210\255g\317\016\0275\025-\302s8}\235\253r\017{\231;n\332\003\313\266\311\326\323p\354\033d(\301;<\0036k\205#H\361\033\327f4x\375v\321\226K\010\366\317\370\235?UJQ=|4\232E\271\254H\373\250\260\237\323\227Q)\360\026\341f\351z,@\006-z\356\235\3527\320z\247g\326\207\264\200u\021\252=\223#'\346\341\217X\247\216n$~\217\265\263\205\367\264\312\242^\220\261Y\003\301\037\254\302\255\341\243\272f\tM5\243\375N\261D\272\222H\003\351\360\373\264sS\036\251\301\236o\003\024p\344\216Jy\303I\016\326_&\213\341U\370\213|s@\205x\363\344\223\241\021\200\021*\2044C\203\211?\203\352S\336\255\207\322\255\263z\3327\360\255\030;AJri\250\262\203Ko,I'\001\312\025\rnTq\375J\344C\032";
+    PyObject *data = __Pyx_DecompressString(cstring, 1175, 3);
     if (unlikely(!data)) __PYX_ERR(0, 1, __pyx_L1_error)
     const char* const bytes = __Pyx_PyBytes_AsString(data);
     #if !CYTHON_ASSUME_SAFE_MACROS
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
-    #elif (CYTHON_COMPRESS_STRINGS) == 2 /* compression: bz2 (1295 bytes) */
-const char* const cstring = "BZh91AY&SY\263O%\344\000\000\225\377\377\347|\273$r\357\375\367\277#\373 \277\377\377\360@@@@@@@@@\000\000@@\000@\000P\004\251\2617\2306\331*\355\2450h\200\242y1M\243H\332\032\203M\000\000\000\000\003@h\320\006O(4&\206\204\020\nm\2524hyA\240hm@=@\000\000z\2152i\243 JhA\t\240\206I<\312\217\325=OP2i\2404\006@\000\000\000\r4\034\r4\323A\241\241\241\221\240\031\000hh\r4d\000\000\302b\003A*i1Q\371F\246\231\246\247\224\r\000h\000\000\032\000\000\000\000\000\266\215\362+\377\227\276\245\022\221\234\362\375\027\245\231\214\006\037\201A\n|\"Z\006\312k\023\033\356\222X|7\006\370\371\207o\273x\376\272\177q].\207e5R\033\312\324`\225@\314\307}\302\035I \230MH\322\342\205\0029Wq\222\263\254\217o\207?u[v\253\372Z1\260>\300\344kk\013j\032\177u\205\240\241\340\3061%E\364\"\013\353\217\rh\274\027\266O\215\323\305\211\316\023\304\002\201\265\rZ\236Kg:\343)\035\202\026l\331\252\005I;\036P\030\246\004P\204\272\233\252\014\212\231\303\014\344\004\254T\256\273\347\"`|gEh\352\037NH\301Og:#\264\217gE\010\304\207\335\226\350.\2045\301[\3465\327\0226+\014D\227hgG9W\021>\007\323\025\0300\025m>\251P\244\032\366\315\314\306\262G\271\r}ji\240\t\313\246\000\216wf[\341\274\265\242;w)M\321i\220\246\372w\"E\206]\271\255\320\363\241\271\314\244\201y\257\010\205\366;\261diE\0231u\207\"\034nATij@\214\330\337_\005\341X\325\322\326\030\177\234BBc&\336\353\354\003Ff\014@,1\"`Z\215\241)VF\323\007Sz\336[\325\250$\024\264p\311\010\254\316\321\350\341\250`V!>q8\362L\360`\021\005\332ah\317\034\327\021\256\n\203(\202\350\272X\3075\252\212}\334\007\257\036\311\254\226\337\327\006,\306Fn:h*~6\356\345V\023\037\205\323\216\241\240\3249<1\343NR\214\247\305P`\031\303\2460q\3312=(x\036PE\237\016?\366$.\247\334\374%.\270m\265\232\354\267I\323t\274w\261Y\222.\357D\266M\202.\371\246\360\240H\243\341\017|[}\rx\321E\356\024\311\346\366\377\034\211\242\331\004\325\264\237\320\231\301i\325\226\316\325\006\254\243\273\346:\022\236g\316\273wdr\3520&*\245lK1\231\257\034\211\214H\\b\341\300}\013\000\321}DP`!`\023\272\002\312\364""\242}%Au\327\034\034c:\375\212xP\004T\250\004\311X\237\346j\214\032\265\016?\021!*aF\310\346\234\023\032\264\240\255b\004\203))\226\214\372\226\206\252\022\265\202\017\001\211d\025\327c\243\245\212\r\264\031\361R\327(\235\202\300\343C\026\332\243*\200\370\001\262xc\2208\2204\346$\2722\250\355\030\nTJ\025\023\021Q\214+\306;\311\215\200LM\006\230\346\2333Q\264=Y7j\317\211\205\235!<m\210\220N\354\225\217\366\246\254\232c\311W`\343\203U\334*,\221(1j\261zkI\t\010\254A\300\t\002\213=Il8kq\252\020\300\240P\301N\240\325\330Y\206C\272\000*\315\211\362\237'\031\343\2748T5f\024\336)0\207(\016hfsvL\220\220,\366\353\206\310T\240\307\213f|\216\254Z\227\021\215\203\t\024\221=\315|_=\211Bx\354\234HX\214\206B\366r\264\347(\310\300\216\020d\202\210\010\026\036\025\005\030\001\007\236*\250c\\\004\346;\304o\316\r!#\214\364voC\326\314\352\330\3478\213;\341\320\252\364\254\264%H\224C\013!\314\242\274[x\260`q9h\013\016R\252\013\264\352\002\274\202\3213\025\276r\354\021\216\216\n\364m\233\026\244\335\201\004\3564\223%\223\353L\334\023\252\351\3061\2764\354\313\030\322\216\204\206\255\334\261\t\261\356^W%Z\246\2268\263g],\372\213a\245g\200B\205#ps\201g9\302\246(\307\0009e\010\227\377\324\017\002&\353s\216\023\013x\\\332\372\320t\277\034\315\"\340\335<0\226\305w\321\221\267s\255\247C[GY\337\273\005D\221Q&>'9A\006|\360!j\177\020\350=\312A\330\255\246\271H\336\317\001\256\324\301\020\242\032x\276}w;z\207\245\235{\267v\202\013\333\354\207\\\377\216\354?\221{\355\334O\357\335\201\313\313(\333\277,3v\332\265\2077\240\246\342\355\307[2\335)\274\270\254aV\231\303\310\252\226)\030LK?\305\334\221N\024$,\323\311y\000";
-    PyObject *data = __Pyx_DecompressString(cstring, 1295, 2);
+    #elif (CYTHON_COMPRESS_STRINGS) == 2 /* compression: bz2 (1300 bytes) */
+const char* const cstring = "BZh91AY&SY\353a\023B\000\000\226\177\377\347|\273$r\357\375\367\277#\373 \277\377\377\360@@@@@@@@@\000\000@@\000@\000P\004\256\335\304\327\240\333\001\333\006\273\rM\t\220&)\214\221\344\323Hz\232\032\000\000\000\000h\000\000i\345\006\205\006H\302\233P\017P\003\324\000\003j\032\032\006\201\240\003\324\311\3524\364\233P%4 \215F\204\004\311\224z\236\247\244i\220\311\241\240\000\000\000\000\006\020\212\236\232OS\324h\000\001\240\000\000\000\032\000\000\000\r4\000%\"\236\232\243\332\215\250\231\017)\221\246\203M\000h\006C@\000\000\000\003!\205\215\303\032\377\337\357\315\002\203\0214o\301\373E*P \374\t\007K\340\364T%B\300\244\237t\310(j\350\t\006\320\032CD[\320\360\240\324\006J&q8\210\232S\212\006+ \204 \2620$\265&\002\240IQnP\3350\2142\315\265\243\306\361\035[\331\365\231\\\316\324\256\265)\360\323\341\204\\\017\006`CO\366\260\265\024<\031\306d\250\276\244A}\261\342\255\027\202\366\303\347t\361bu\302x\200H%\235l%\344-\227\\Ur\264a<\363\306\005\211\272^H\030d\004U\202\035G\242B\242\204\253Vd\341\014\013\022\260\365\363\314\224\2762\342\270V\013\233\034`#\247\220\362\\?\253\242\244\202b\353\311t\033\224\353pY\370\221\211D\313\212\322\2177\245L\271\031O\211\332\201\364EV\006\323y\036hH\256\026\366\267\215\325\252m7\215\275Ji\250\t\307^\000\2167f\\\320\336j\325\036\205\312S\212-2\024\346\247r$Yc\320\232\335\017:\233\214\304\220/9\341\020\276\347v,\215\021D\314]e\274\203\006\302\007UN\004l\214\326m==\360xK\253\210/\356\320\034\024\206\025Y\232|\t#XY\001\303\263\022\033Jc\204\340\337\246\340\256\354\237#\223\203xY\263\252\223\276E\317\304\311T\201F51\322i\022\020\2244\301\200J\014%U\325\222\":1-\310\346L\005\314m\364CiEE>\376C\327\243\264m%\271\272\240\315\230\301\255\307M\005O\316\335\374U\204\307\345t\343\250h6\016O>}\024\337(\312|\205\006A\256\0351\223\216\311\221\336\207\201\345\004Y\362\350\361\346B\351~'\347\224\272\241\270k5\335n\271\327\272^S\330\254\311\027w\242[\246\301\027}i\274H\022(\371C\3376\346\241\267:(\275\302\230y\275\277\347\"h\267A5m\017\360L\340\264\331""\215\335\272\rYG\177\262\350Jx\037]xx\260o\300!E`;\002\21233c\030\211f\034\021\030\210NzO\201%FB\220BA\360)D\330\372\323eC5\034\272\313\211\3152\333\212\304\204%\202\222\365@F\252d\237q\317a\002\320i\341I\tS*6\016\t\3111\263D\025\254@\220bJcV\276\225\251\252\204\255a\212\005\332r&9xq\031pV\375\322\364\264\267;YhhBtl\331'$\205*\035\245\277n\"\031\313\347\231\224\372\274\222w\320Ka\360\330~\006\305\32148v\277\r\30114\032c\202l\315F\324\365d\335\273>fVt\204\361\303\021 \235\331+\036\032\2330\323\035\205v\016\214\232\256\341Qa\022\2036\253\027\246\324\220\220\212\330U\014\206\265\351-:*\365\270\365\025\336\220\302\033=E\365\350\335G\022\345\250L\347r|\307\303\214\361\356\016\025\r\232\302\234\302\223(r\200\346\246g8\260\311\004@\330\317\312\031\210\3168!\257u\270\363V\313\221\230\205\262\007Y\3323\010\265TU+m)\270\237mh>\222\025`\327\311\321\273b\221AJ\200\244Z_\204\342\001\344d\371\302\017zQ[n\245\215\217-\3429\265\301\240H\343=\035\233\273\353k:w9\306\"\316\371r\252\275+-\tR%\335\023\221\323\211\241\263kooCD\340m\376F\325Y~\352\300\333_\233i\204i\\g\336d:,\257F\335\271lM\326\020O\021\2412Y>\324\315\316\235WL\343;\347N\324\261\235(\350Hj\335\313\020\233>\345\345oU\252h\307C6\272\350\317\260\266Z-y\014a\262PD\r\330Y\327U\332\326\336\026\\\203\276\357\036\n\005\224l\354\036\024L\0026`\234\200\220\366\352\007\201Ji%i&l\267H8!\210\345\010\214\313vq\272\311\200PI\025\022c\344s|\020k\343\201\013c\362\034\247\275H:\325\264\327\0227\263\3165\311\247\014\204!G\231\355g\337\277\264K\034\226\255p\004+w\010Yro\034_\241v\343\271w\247\336\026,P+_\242\265=W.aS\344!q\213\322Y\273z\275=\373\366\260l\322\341cF\205$\370*B\277\305\334\221N\024$:\330D\320\200";
+    PyObject *data = __Pyx_DecompressString(cstring, 1300, 2);
     if (unlikely(!data)) __PYX_ERR(0, 1, __pyx_L1_error)
     const char* const bytes = __Pyx_PyBytes_AsString(data);
     #if !CYTHON_ASSUME_SAFE_MACROS
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
-    #elif (CYTHON_COMPRESS_STRINGS) != 0 /* compression: zlib (1165 bytes) */
-const char* const cstring = "x\332}UMo\0337\020\215\001\271P\333\000\205\0354@\200\036\350\002\201\0224\336\304I\320/\270.\\\333\005th\342\304H\200\236\010\212\234\225X\357\222k~\310\332\234z\364q\217:\352\350\243\216>\366g\350\250\237\220\237\320!we\311q\321\203W\\\356\014\347\315{o\350\237\311~\226\021!sPVjeIa\200\203\220\252\277\334$\017\005\311\275u\244\007D*\001#\020\204)A\224v\304f\022\303\177\363i\n\206\014%\234\023\241\301\306O0*\264\005b\235\221\002\354\001SD\253\254$\334\000s@\030\351\325In\300\034\221\226p\255\234\354{\355-\026!9\344\332\224\tf\205\243\230\265\262\257\210\323\004\223\305v<\247\216\010%\233\240\346\340s#\035\353e\320\004\324\240R\243\363\377\313\215m\221s\351\006\304\225\005\220N\263\357\014S6\266\261L\251\3030C\"Un\205\273\303U\302dMB\035t\224\027\256$v\300\360h\347\013\004\227jCx\351\006Z%\314\030Vv#\000\355\035\321)\351i\257\204%\217\330\010Oy(\036wo\327\252\311\367E\241\215\003\321UC\226ITI\013x\022\210\307`\024\251\303;\004\353t\260Xh\244\363\204\3641k\021\\\303A\256c\231\335?b\203\357C\203\010\341\225F*\2434\007\021e\350G@&{`\220d\2440\310\212E\242~\212\034\037\035o\277\374\361e\264\205\201\277\260\274Et=\236\241rh\207\320\223\227\231\303b\201^\233\220nJJ\355\211\002\204\211\262\026\030\267\232\340\006\240\210\005\027\026\244\023\265`\016\373\246\230\216\336\3544\274\312!\204\354\337Yf!y}\203<\204\334\030\214q\016v\301\346\211\203\202\344\254\214\374\241\237?\200\321K\242\337\251\350\034<\022\3358\004\203\306p\220\207w\335\013M%{\235\307\2772!\250\n\364\204f\t2\364l\304u\226\0058(L\302z|w\305\313!\250\006\273\367\351\366\302B{B\332P\027b\365>'\217\202L\375\350\236\320A\030F\0309P.\216\306r.\245\255SD@i\345\007 \273\277\220g\267\274\2454J\2272\2379B\251\001\3419PJ\204\217\215*\255\266Q\312\241d\031~\345RIG\251\362yQ&\224k\003I\216y2\236CR&\263Z/\231\007\343\255\206\371\234\341T|\032\321\360\266g\r\177Z0\303\220\246\354i\215\215:]\234&E9\332\255o\010q\203\252\333{\301\311\327\214\335\370~\275\353\257\345\303B\232\307k&\002\027\314\261\344?\276\326#\020\316hn\251d""\377\344\240\333=\3122YXi)=.G\370w\210N\247\257P\202\267\220\236\300\231\007\305!\014J\262\234\031T}q*\255}\307l\251\270\324\t\262\203c-\025\330\036\263\300\221\343\340qJ\027\213>\270 _x\305 *\221\030\3038\364\030?\345heTC\204\362T\204\311\211\017\212\310j^!\334+\210\006\307\036P\2148\233`\2146i\306\372\026}\200\2424\303Oi\352\025\017e\261\240u\001'\355\033\034\2772\nASf\235\024\224\326\272\341o\270\220\244r/\236\207r\327M\324Nk\354v\232\351\276t\330K\316\0206\305+2\334\217\341\022\302\027-|\206\277\212\345\313'Z\027\237p\216\217\"\232\007\333(\260\321\2055\222\025k\024\272\240\024\355A\371\000\370\251\365y\375\326@\017\313\310E\\yUH~\212\345\216\324\"n\030\377\t\204~\317<\313\352\372K\367_\257\232\202\313\r\030\205e_Z\274\333(\305+\250\301\216\253f\210\342\272\201\261\262^\234\024=\025\330\301m\203\337\240\260\330\016\372\313\007\025\035n\323\200\027\273\366\005\372\022\3602\366`G\177\257}\374\342\316\372fu\277\032\216\337\214\331\254\265\261X\316[\235\211\271\274\177i\246\367\246\207W\237]\365\376Y\233\265\276\273|~\371~\2723=\230\016\257\336^\235\205\334o'\033\263\3267\343\375Y\353\301x\343c\373\316\372\347\027\353\027\357\252\255jg\326\376\352\342\254Z\257\336\314[\355\305\336\274\275\211\077\077\215\367\307'\223\265Y|\371~\2741\336\232\267\357U;Uw\374\347\204_nb\221\223\351\332\274}\367\342\250\372\272b\325\331\354n\010|Q\301\370\207\311\326dg\336\372\362b\347\365\277\007('\375";
-    PyObject *data = __Pyx_DecompressString(cstring, 1165, 1);
+    #elif (CYTHON_COMPRESS_STRINGS) != 0 /* compression: zlib (1167 bytes) */
+const char* const cstring = "x\332}TMo\0337\020\215\001\271P\333\000\205\0354@\200\036\350\002\201\0224\336\304I\320/\270.\\\333\005th\342\304H\200\236\010\212\234\225X\357\222k~\310\332\234z\364q\217:\352\350\243\216>\366g\350\250\237\220\237\320!we\311q\321\203(\222;\303\231y\357\315\374L\366\263\214\010\231\203\262R+K\n\003\034\204T\375\345%y(H\356\255#= R\t\030\201 L\t\242\264#6\223h\376\233OS0d(\341\234\010\r6~\202Q\241-\020\353\214\024`\017\230\"Ze%\341\006\230\003\302H\257vr\003\346\210\264\204k\345d\337ko1\010\311!\327\246L\320+<\305\254\225}E\234&\350,\266\343;\265E\010\331\0305\017\237\033\351X/\203\306\240N*5:\377?\337X\0269\227n@\\Y\000\3514\367\3160ec\031K\227\332\014=$B\345V\260;\\\005L\326 \324FGy\341Jb\007\014\237v\276\300\344Rm\010/\335@\253\204\031\303\312nL@{GtJz\332+a\311#6\302W\036\212\307\335\333\261j\360}Qh\343@t\325\220e\022Y\322\002\236\004\340\321\030I\352\360\016\3018\035\014\026\n\351<!}\364Z\030\327\351 \3261\314\356\037\261\300\367\241@L\341\225F(#5\0071\313P\217\200L\366\300 \310\010a\240\025\203D\376\0249>:\336~\371\343\313(\013\003\177ax\213\331\365x\206\314\241\034BM^f\016\203\005xmB\272))\265'\n0M\244\265@\273U\0077\000E,\270\260!\235\310\005sX7Ew\324f\247\301U\016!x\377\3162\013\311\353\033\340a\312\215\300\030\347`\027h\2368(H\316\312\210\037\352\371\003\030\275\004\372\235\212\312\301'Q\215C0(\014\007y8\353^(*\331\353<\376\225\tAU\200'\024K\020\241g#\256\263,\244\203\304$\254\307wW\264\034\214\352d\367>\275^HhOH\033\342B\214\336\347\344Q\240\251\037\325\023*\010\315\010#\007\312\305\326X\366\245\264\265\213\010YZ\371\001\310\356/\344\331-m)\215\324\245\314g\216Pj@x\016\224\022\341c\241J\253m\244r(Y\206_\271T\322Q\252|^\224\t\345\332@\222\243\237\214\357\220\224\311\254\346K\346Ax\253f>g\330\025\237Z4\270\355Y\303\237\026\3140\204){Z\347F\235.N\223\242\034\355\326\023B\334\200\352\366]P\3625b7\276_\337\372k\3720\220\346q\314\304\304\005s,\371\217\257u\013\2047\232)\225\354\237\034t\273GY&\013+-\245\307\345\010\177\207\250t\372\n)x\013\351\t\234yP\034B\243$""\313\236A\326\027\257\322Zw\314\226\212K\235 :\330\326R\201\3551\013\0341\016\032\247t\261\351\203\013\364\205#\032Q\211\300\030\306\241\307\370)G)#\033\"\204\247\"tN\\(fV\343\na\256`6\330\366\200d\304\336\004c\264I3\326\267\250\003$\245i~JS\257x\010\213\001\255\013y\322\276\301\366+#\0214e\326IAi\315\033\376\207\201$\225{\361<\204\273.\242VZ#\267\323L\367\245\303Zr\206iS\034\221a>\206!\204\007-|\206\377\212\345\313\025\245\213+\234\343RD\361`\031\005\026Z\350\202R\224\002\345\003\340\247\326\347\365\251I3lc\335q\347U!\371)>}\244\026v\3038\360Cmg\236eu\254\245\322\257w\215\356\226\0270\n\333\276\2648\307(\305q\323\344\211\273\246a\342\276Ice\277x)\352' \201\372N\026\372NV\364\215\346\006}\240\260xB\215\371\300\244\003\213+\326\201\225\373\002\265\t8\220=\330\321\337k\037\277\270\263\276Y\335\257\206\3437c6km,\266\363Vgb.\357_\232\351\275\351\341\325gW\275\177\326f\255\357.\237_\276\237\356L\017\246\303\253\267Wg\301\367\333\311\306\254\365\315x\177\326z0\336\370\330\276\263\376\371\305\372\305\273j\253\332\231\265\277\2728\253\326\2537\363V{q7oo\342\337O\343\375\361\311dm\026\017\337\2177\306[\363\366\275j\247\352\216\377\234\360\313M\014r2]\233\267\357^\034U_W\254:\233\335\r\206/*\030\3770\331\232\354\314[_^\354\274\376\027\233[)s";
+    PyObject *data = __Pyx_DecompressString(cstring, 1167, 1);
     if (unlikely(!data)) __PYX_ERR(0, 1, __pyx_L1_error)
     const char* const bytes = __Pyx_PyBytes_AsString(data);
     #if !CYTHON_ASSUME_SAFE_MACROS
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
-    #else /* compression: none (2116 bytes) */
-const char* const bytes = ": All dimensions preceding dimension %d must be indexed and not slicedBuffer view does not expose stridesCan only create a buffer that is contiguous in memory.Cannot assign to read-only memoryviewCannot create writable memory view from read-only memoryviewCannot index with type 'Cannot transpose memoryview with indirect dimensionsDimension %d is not directEmpty shape tuple for cython.arrayIndex out of bounds (axis %d)Indirect dimensions not supportedInvalid mode, expected 'c' or 'fortran', got Invalid shape in axis <MemoryView of Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.Out of bounds on buffer access (axis Step may not be zero (axis %d)Unable to convert item to object.>')?add_note and  at 0xcollections.abc<contiguous and direct><contiguous and indirect>disableenablegc (got got differing extents in dimension isenableditemsize <= 0 for cython.arrayno default __reduce__ due to non-trivial __cinit__numpy._core.multiarray failed to importnumpy._core.umath failed to import object>src/parallel/cython_topk.pyx<strided and direct><strided and direct or indirect><strided and indirect>unable to allocate array data.unable to allocate shape and strides.ASCIIEllipsis__Pyx_PyDict_NextRefSequenceView.MemoryViewabcallocate_bufferasyncio.coroutinesbasec__class____class_getitem__cline_in_tracebackcount__dict__dtypedtype_is_objectemptyencodeenumerateerrorflagsformatfortran__func____getstate__greedy_topk_fastid__import__indexint32_is_coroutineitemsitemsizeklogits__main__memviewmode__module__name__name__ndim__new__npnumpyobjpackparallel.cython_topkpop__pyx_checksum__pyx_state__pyx_type__pyx_unpickle_Enum__pyx_vtable____qualname____reduce____reduce_cython____reduce_ex__register__set_name__setdefault__setstate____setstate_cython__shapesizestartstepstopstruct__test__unpackupdatevaluesx\200\001\360\n\000\005\022\220\026\220v\230Q\230a\330\004\021\220\026""\220v\230Q\230a\340\004'\240r\250\026\250r\260\023\260D\270\006\270b\300\001\330\004+\2502\250V\2601\260C\260v\270R\270q\360\n\000\005\"\240\021\330\004\034\230A\330\004\031\230\021\360\010\000\005\t\210\005\210U\220!\2201\330\010\017\210q\220\005\220Q\340\004\010\210\005\210U\220!\2201\340\010\022\220!\2209\230A\230S\240\001\330\010\022\220!\2206\230\021\230!\340\010\023\2201\220I\230Y\240c\250\022\2502\250S\260\001\340\010\014\210E\220\025\220a\220q\330\014\022\220!\2203\220e\2307\240!\2401\340\004\013\2101O";
+    #else /* compression: none (2120 bytes) */
+const char* const bytes = ": All dimensions preceding dimension %d must be indexed and not slicedBuffer view does not expose stridesCan only create a buffer that is contiguous in memory.Cannot assign to read-only memoryviewCannot create writable memory view from read-only memoryviewCannot index with type 'Cannot transpose memoryview with indirect dimensionsDimension %d is not directEmpty shape tuple for cython.arrayIndex out of bounds (axis %d)Indirect dimensions not supportedInvalid mode, expected 'c' or 'fortran', got Invalid shape in axis <MemoryView of Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.Out of bounds on buffer access (axis Step may not be zero (axis %d)Unable to convert item to object.>')?add_note and  at 0xcollections.abc<contiguous and direct><contiguous and indirect>disableenablegc (got got differing extents in dimension isenableditemsize <= 0 for cython.arrayno default __reduce__ due to non-trivial __cinit__numpy._core.multiarray failed to importnumpy._core.umath failed to import object>src/parallel/cython_topk.pyx<strided and direct><strided and direct or indirect><strided and indirect>unable to allocate array data.unable to allocate shape and strides.ASCIIEllipsis__Pyx_PyDict_NextRefSequenceView.MemoryViewabcallocate_bufferasyncio.coroutinesbasec__class____class_getitem__cline_in_tracebackcount__dict__dtypedtype_is_objectemptyencodeenumerateerrorflagsformatfortran__func____getstate__greedy_topk_fastid__import__indexint32_is_coroutineitemsitemsizeklogits__main__memviewmode__module__name__name__ndim__new__npnumpyobjpackpop__pyx_checksum__pyx_state__pyx_type__pyx_unpickle_Enum__pyx_vtable____qualname____reduce____reduce_cython____reduce_ex__register__set_name__setdefault__setstate____setstate_cython__shapesizesrc.parallel.cython_topkstartstepstopstruct__test__unpackupdatevaluesx\200\001\360\n\000\005\022\220\026\220v\230Q\230a\330\004\021\220""\026\220v\230Q\230a\340\004'\240r\250\026\250r\260\023\260D\270\006\270b\300\001\330\004+\2502\250V\2601\260C\260v\270R\270q\360\n\000\005\"\240\021\330\004\034\230A\330\004\031\230\021\360\010\000\005\t\210\005\210U\220!\2201\330\010\017\210q\220\005\220Q\340\004\010\210\005\210U\220!\2201\340\010\022\220!\2209\230A\230S\240\001\330\010\022\220!\2206\230\021\230!\340\010\023\2201\220I\230Y\240c\250\022\2502\250S\260\001\340\010\014\210E\220\025\220a\220q\330\014\022\220!\2203\220e\2307\240!\2401\340\004\013\2101O";
     PyObject *data = NULL;
     CYTHON_UNUSED_VAR(__Pyx_DecompressString);
     #endif
