@@ -60,6 +60,9 @@ uv run python -m src.benchmarks.bench_index
 # Full pipeline: offline corpus encoding + online retrieval.
 uv run python -m src.benchmarks.bench_pipeline
 
+# Matmul micro-bench: naive vs cache-blocked vs cache-blocked+SIMD vs BLAS.
+uv run python -m src.benchmarks.bench_matmul --include-large
+
 # Sanity check: numpy <-> Cython agree, and outputs plug into ClaraTopK.
 uv run python -m src.benchmarks.integration_check
 ```
@@ -77,6 +80,24 @@ uv run python -m src.data.cli bench-on-real \
 
 `datasets` is an optional dependency; if it's not installed, all loaders
 fall back to a small bundled sample of 20 Wikipedia-flavored paragraphs.
+
+## Profile a benchmark
+
+```bash
+# py-spy with native (C-frame) stack capture; flamegraph at reports/.
+scripts/profile.sh bench_pipeline
+
+# Other targets work too.
+scripts/profile.sh bench_matmul --include-large
+
+# Fall back to austin (better SIP behaviour on macOS) or cProfile (no C frames).
+PROFILER=austin   scripts/profile.sh bench_pipeline
+PROFILER=cprofile scripts/profile.sh bench_pipeline
+```
+
+The script attaches the profiler to `.venv/bin/python` directly, sidestepping
+the macOS double-`uv-run` trap. See the comment block in `scripts/profile.sh`
+for what to try if py-spy still complains about hardened runtime.
 
 ---
 
