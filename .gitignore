@@ -1,1 +1,51 @@
 REFLEXION.md
+
+# -------- Python -------- #
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# -------- Virtual environments -------- #
+.venv/
+venv/
+env/
+.python-version
+uv.lock
+
+# -------- Build artifacts -------- #
+build/
+dist/
+*.so
+*.dylib
+*.dll
+*.o
+*.a
+*.pyd
+# Cython-generated C sources (regenerate from .pyx via setup.py build_ext)
+src/parallel/*.c
+src/parallel/*.html
+
+# -------- Data and outputs (large, regenerable) -------- #
+data/*.txt
+data/*.jsonl
+data/*.npy
+data/*.json
+reports/*.json
+
+# Keep the data/ and reports/ directories in the repo so the relative paths work,
+# but ignore everything inside them. Drop a `.gitkeep` if you want to commit the
+# empty dirs:  touch data/.gitkeep reports/.gitkeep
+!data/.gitkeep
+!reports/.gitkeep
+
+# -------- Editors / OS -------- #
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
