@@ -2,16 +2,11 @@
 
 **C**ontinuous **L**atent **A**ugmented-**R**etrieval **I**nference **O**n **N**-cores.
 
-A CPU-parallel reimplementation of [CLaRa](https://arxiv.org/abs/2511.18659)
-(Apple R&D's joint retrieval-and-generation RAG framework) at toy scale,
-written for a course on parallel computing. The point is not answer quality;
-the point is to take CLaRa's three compute hotspots — document encoding,
-cosine retrieval over a corpus, and the differentiable Straight-Through
+A CPU-parallel reimplementation of [CLaRa](https://arxiv.org/abs/2511.18659) at toy scale. The point is to take CLaRa's three compute hotspots — document encoding, cosine retrieval over a corpus, and the differentiable Straight-Through
 top-k — and parallelize each on CPU with Cython + OpenMP, then benchmark
 against a naive baseline.
 
-Authors: Paco Goze (encoder + index side) and Avner El Baz (decoder side).
-Course: Xavier Dupré's parallel computing class, May 2026.
+Authors: Avner El Baz Paco Goze.
 
 ---
 
@@ -20,15 +15,14 @@ Course: Xavier Dupré's parallel computing class, May 2026.
 Pipeline mirrors CLaRa, end-to-end:
 
 1. **Encoder** — a 2-layer transformer compresses each document into a small
-   set of memory-token embeddings (`src/models/encoder.py`).
+   set of memory-token embeddings (`src/models/encoder.py`);
 2. **Index** — embeddings stored as a frozen `(N, D)` bank
-   (`src/index/store.py`).
+   (`src/index/store.py`);
 3. **Retriever** — cosine similarity over the bank + top-k selection
-   (`src/index/scorer.py`).
+   (`src/index/scorer.py`);
 4. **Differentiable top-k** — Straight-Through estimator that lets the
-   generator's loss propagate back to the retriever (`src/models/topk.py`).
-5. **Decoder** — generator that conditions on the retrieved memory tokens
-   (WIP on Avner's side).
+   generator's loss propagate back to the retriever (`src/models/topk.py`);
+5. **Decoder** — generator that conditions on the retrieved memory tokens.
 
 Each compute hotspot has three implementations side by side for the
 benchmark report: a pure-Python loop, a numpy/BLAS baseline, and a
@@ -118,8 +112,7 @@ setup.py             Builds all three Cython extensions in-place.
 ## Implementation notes
 
 - **Parallelism axis.** OpenMP `prange` over the batch axis for the encoder
-  and over the corpus axis for the retriever. Both are embarrassingly
-  parallel, which gives the cleanest speedup curves in the report.
+  and over the corpus axis for the retriever.
 - **Same weights across backends.** `build_encoder(...)` accepts a shared
   `params=`, so the numpy baseline and the Cython version produce
   bit-comparable outputs (~1e-6 max diff, float32 epsilon).
