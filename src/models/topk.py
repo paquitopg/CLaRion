@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sys
 import os
+import math
 
 sys.path.insert(0, os.getcwd())
 logger = logging.getLogger("clara_topk")
@@ -31,33 +32,81 @@ except Exception as e:
     logger.exception(f"Cython not available: {e}")
 
 
-
-class ClaraTopK(nn.Module):
+class ClaraTopKNaive:
     def __init__(self, k: int, temperature: float = 1.0):
-        super().__init__()
         self.k = k
         self.temperature = temperature
 
-    def forward(self, logits: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, logits: torch.Tensor):
 
-        B, N = logits.shape
-        scaled = logits / max(self.temperature, 1e-6)
+        logits = logits.detach().cpu().tolist()
+        B = len(logits)
+        N = len(logits[0])
+        K = self.k
 
-        _, topk_idx = torch.topk(scaled, self.k, dim=-1)
+        hard = []
+        indices = []
 
-        hard = torch.zeros(B, self.k, N, device=logits.device, dtype=logits.dtype)
-        hard.scatter_(2, topk_idx.unsqueeze(-1), 1.0)
+        for b in range(B):
 
-        soft = torch.empty_like(hard)
-        taken = torch.zeros_like(logits)
+            scaled = [x / max(self.temperature, 1e-6) for x in logits[b]]
 
-        for j in range(self.k):
-            mask = 1.0 - taken.detach()
-            masked = scaled + torch.log(mask + 1e-8)
-            soft[:, j] = F.softmax(masked, dim=-1)
-            taken = torch.clamp(taken + hard[:, j], max=1.0)
+            taken = [0.0] * N
+            hard_b = []
+            idx_b = []
 
-        return hard + (soft - soft.detach()), topk_idx
+            for _ in range(K):
+
+                # argmax
+                best_i = max(range(N), key=lambda i: scaled[i] + math.log(1.0 - taken[i] + 1e-8))
+
+                hard_vec = [0.0] * N
+                hard_vec[best_i] = 1.0
+
+                hard_b.append(hard_vec)
+                idx_b.append(best_i)
+
+                taken[best_i] = 1.0
+
+            hard.append(hard_b)
+            indices.append(idx_b)
+
+        hard = torch.tensor(hard)
+        indices = torch.tensor(indices)
+
+        return hard, indices
+
+
+class ClaraTopKNumpy:
+    def __init__(self, k: int, temperature: float = 1.0):
+        self.k = k
+        self.temperature = temperature
+
+    def forward(self, logits: torch.Tensor):
+
+        x = logits.detach().cpu().numpy()
+        B, N = x.shape
+        K = self.k
+
+        scaled = x / max(self.temperature, 1e-6)
+
+        hard = np.zeros((B, K, N), dtype=np.float32)
+        indices = np.zeros((B, K), dtype=np.int32)
+
+        taken = np.zeros((B, N), dtype=np.float32)
+
+        for b in range(B):
+            for j in range(K):
+
+                masked = scaled[b] + np.log(1.0 - taken[b] + 1e-8)
+
+                idx = int(np.argmax(masked))
+
+                hard[b, j, idx] = 1.0
+                indices[b, j] = idx
+                taken[b, idx] = 1.0
+
+        return torch.from_numpy(hard), torch.from_numpy(indices)
 
 
 class ClaraTopKCython(nn.Module):
@@ -111,7 +160,6 @@ def benchmark(model: nn.Module, logits: torch.Tensor, iters: int = 50) -> float:
     return (end - start) / iters
 
 
-
 def main():
 
     torch.manual_seed(0)
@@ -121,27 +169,28 @@ def main():
 
     logger.info(f"Benchmark setup: B={B}, N={N}, K={K}")
 
-    logger.info("Running PyTorch baseline")
-    m1 = ClaraTopK(K)
+    logger.info("Running NumPy version")
+    m2 = ClaraTopKNumpy(K)
+    t2 = benchmark(m2, logits)
+    logger.info(f"NumPy time: {t2:.6f}s")
 
-    out1, idx1 = m1(logits)
+    logger.info("Running Naive Python version")
+    m1 = ClaraTopKNaive(K)
     t1 = benchmark(m1, logits)
-
-    logger.info(f"PyTorch time: {t1:.6f}s")
+    logger.info(f"Naive time: {t1:.6f}s")
 
     if CYTHON_AVAILABLE:
+        logger.info("Running Cython version")
+        m3 = ClaraTopKCython(K)
+        t3 = benchmark(m3, logits)
 
-        logger.info("Running Cython optimized version")
-        m2 = ClaraTopKCython(K)
+        logger.info(f"Cython time: {t3:.6f}s")
 
-        out2, idx2 = m2(logits)
-        t2 = benchmark(m2, logits)
-
-        logger.info(f"Cython time: {t2:.6f}s")
-        logger.info(f"Speedup: {t1 / t2:.2f}x")
+        logger.info(f"Speedup Numpy → Cython: {t2 / t3:.2f}x")
+        logger.info(f"Speedup Naive → Cython: {t1 / t3:.2f}x")
 
     else:
-        logger.info("Cython benchmark skipped")
+        logger.info("Cython skipped")
 
 
 if __name__ == "__main__":
