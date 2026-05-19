@@ -10,7 +10,9 @@ dependencies = [
     "logging>=0.4.9.6",
     "numpy>=2.4.4",
     "py-spy>=0.4.2",
+    "scikit-learn>=1.8.0",
     "torch>=2.11.0",
+    "transformers>=5.8.1",
 ]
 
 # Package layout: `src/` is itself a Python package (it has `src/__init__.py`),
@@ -23,3 +25,9 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
+
+[dependency-groups]
+dev = [
+    "pylint>=4.0.5",
+    "ruff>=0.15.13",
+]
