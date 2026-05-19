@@ -25,9 +25,8 @@ can keep its memory footprint flat as N grows.
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass, field
-from typing import Iterable, Iterator, Optional
+from typing import Iterator, Optional
 
 logger = logging.getLogger("clarion.data.loaders")
 if not logger.handlers:

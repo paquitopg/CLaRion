@@ -124,4 +124,96 @@ SAMPLE_QA_PAIRS: list[dict] = [
         "answer": "Single Instruction Multiple Data",
         "supporting_doc_indices": [12],
     },
+    {
+        "question": "Which NFL player is both a record-setting rookie and related to Ivory Lee Brown?",
+        "answer": "Adrian Lewis Peterson",
+        "supporting_doc_indices": [0, 1],
+    },
+    {
+        "question": "Which team drafted Adrian Peterson and what record did he set?",
+        "answer": "Minnesota Vikings, 1,925 yards rushing",
+        "supporting_doc_indices": [0],
+    },
+    {
+        "question": "What is the relationship between Ivory Lee Brown and Adrian Peterson?",
+        "answer": "Ivory Lee Brown is Adrian Peterson's uncle",
+        "supporting_doc_indices": [1],
+    },
+    {
+        "question": "Who directed Big Stone Gap and where is the story set?",
+        "answer": "Adriana Trigiani, Virginia",
+        "supporting_doc_indices": [2],
+    },
+    {
+        "question": "Which actress stars in Big Stone Gap and what genre is the film?",
+        "answer": "Ashley Judd, romantic comedy drama",
+        "supporting_doc_indices": [2],
+    },
+    {
+        "question": "Where does Adriana Trigiani live and what is her profession?",
+        "answer": "Greenwich Village, New York City; author and film director",
+        "supporting_doc_indices": [3],
+    },
+    {
+        "question": "Where were the first modern Olympic Games held and how many athletes participated?",
+        "answer": "Athens, Greece; 241 athletes",
+        "supporting_doc_indices": [4],
+    },
+    {
+        "question": "How many nations participated in the 1896 Olympics and what were they called officially?",
+        "answer": "14 nations; Games of the I Olympiad",
+        "supporting_doc_indices": [4],
+    },
+    {
+        "question": "What is the historical significance of Athens in terms of age?",
+        "answer": "one of the world's oldest cities with over 3,400 years of recorded history",
+        "supporting_doc_indices": [5],
+    },
+
+    {
+        "question": "What problem does Retrieval-Augmented Generation solve?",
+        "answer": "hallucination and knowledge obsolescence",
+        "supporting_doc_indices": [6],
+    },
+    {
+        "question": "What are continuous representations in ML?",
+        "answer": "dense differentiable embeddings in high-dimensional space",
+        "supporting_doc_indices": [7],
+    },
+    {
+        "question": "What is the key idea behind the CLaRa framework?",
+        "answer": "documents encoded into memory tokens used for retrieval and generation",
+        "supporting_doc_indices": [18],
+    },
+    {
+        "question": "What does OpenMP provide in programming?",
+        "answer": "shared-memory parallel programming API",
+        "supporting_doc_indices": [8],
+    },
+    {
+        "question": "What is SIMD and how is it implemented on modern CPUs?",
+        "answer": "parallel execution of same operation on multiple data points using SSE, AVX, ARM NEON",
+        "supporting_doc_indices": [12],
+    },
+    {
+        "question": "What is BLAS used for?",
+        "answer": "basic linear algebra operations like matrix and vector multiplication",
+        "supporting_doc_indices": [13],
+    },
+    {
+        "question": "What is Cython used for in Python ecosystems?",
+        "answer": "compiling Python-like code into C for performance",
+        "supporting_doc_indices": [9],
+    },
+    {
+        "question": "What is HotpotQA designed for?",
+        "answer": "multi-hop question answering with supporting facts",
+        "supporting_doc_indices": [17],
+    },
+    {
+        "question": "What is Natural Questions dataset?",
+        "answer": "open-domain QA dataset with questions from Google search",
+        "supporting_doc_indices": [16],
+    },
+
 ]

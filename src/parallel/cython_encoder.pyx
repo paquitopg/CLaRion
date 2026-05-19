@@ -154,92 +154,132 @@ cdef inline void _matmul_blocked_omp(
     int M, int K, int N,
     int num_threads,
 ) noexcept nogil:
-    cdef int ii, jj, kk
-    cdef int i_end, j_end, k_end
-    cdef int t
-    cdef int nt = num_threads if num_threads > 0 else 0
 
-    # Zero output.
+    cdef int ii, jj, kk, t
+    cdef int i0, i_end
+    cdef int j_end, k_end
+    cdef int nt = num_threads if num_threads > 0 else 0
+    cdef int n_i = (M + BM_TILE - 1) // BM_TILE
+
     for t in range(M * N):
         C[t] = 0.0
 
     if nt > 0:
-        for ii in prange(0, M, BM_TILE, nogil=True,
-                          schedule='static', num_threads=nt):
-            i_end = ii + BM_TILE if ii + BM_TILE < M else M
+        for ii in prange(n_i, nogil=True, schedule='static', num_threads=nt):
+
+            i0 = ii * BM_TILE
+            i_end = i0 + BM_TILE if i0 + BM_TILE < M else M
+
             for kk in range(0, K, BK_TILE):
+
                 k_end = kk + BK_TILE if kk + BK_TILE < K else K
+
                 for jj in range(0, N, BN_TILE):
+
                     j_end = jj + BN_TILE if jj + BN_TILE < N else N
+
                     clarion_micro_kernel_no_simd(
-                        &A[ii * K + kk], &B[kk * N + jj], &C[ii * N + jj],
-                        i_end - ii, k_end - kk, j_end - jj,
+                        &A[i0 * K + kk],
+                        &B[kk * N + jj],
+                        &C[i0 * N + jj],
+                        i_end - i0,
+                        k_end - kk,
+                        j_end - jj,
                         K, N, N,
                     )
+
     else:
-        for ii in prange(0, M, BM_TILE, nogil=True, schedule='static'):
-            i_end = ii + BM_TILE if ii + BM_TILE < M else M
+        for ii in prange(n_i, nogil=True, schedule='static'):
+
+            i0 = ii * BM_TILE
+            i_end = i0 + BM_TILE if i0 + BM_TILE < M else M
+
             for kk in range(0, K, BK_TILE):
+
                 k_end = kk + BK_TILE if kk + BK_TILE < K else K
+
                 for jj in range(0, N, BN_TILE):
+
                     j_end = jj + BN_TILE if jj + BN_TILE < N else N
+
                     clarion_micro_kernel_no_simd(
-                        &A[ii * K + kk], &B[kk * N + jj], &C[ii * N + jj],
-                        i_end - ii, k_end - kk, j_end - jj,
+                        &A[i0 * K + kk],
+                        &B[kk * N + jj],
+                        &C[i0 * N + jj],
+                        i_end - i0,
+                        k_end - kk,
+                        j_end - jj,
                         K, N, N,
                     )
-
-
 # --------------------------------------------------------------------------- #
 # Variant 3 — BLOCKED + SIMD: same tiling, but the micro-kernel inner loop
 # is annotated with #pragma omp simd, forcing the compiler to emit explicit
 # NEON / AVX instructions even when its cost model says auto-vec isn't worth
 # it. Typically gains 1.2–2× over Variant 2 on Apple Silicon.
 # --------------------------------------------------------------------------- #
+
 cdef inline void _matmul_blocked_simd_omp(
     float* A, float* B, float* C,
     int M, int K, int N,
     int num_threads,
 ) noexcept nogil:
-    cdef int ii, jj, kk
-    cdef int i_end, j_end, k_end
-    cdef int t
+
+    cdef int ii, jj, kk, t
+    cdef int i0, i_end
+    cdef int j_end, k_end
     cdef int nt = num_threads if num_threads > 0 else 0
+    cdef int n_i = (M + BM_TILE - 1) // BM_TILE
 
-    # Parallel zero-init — at M*N ≥ 1e6 this is non-trivial.
-    if nt > 0:
-        for t in prange(M * N, nogil=True, schedule='static', num_threads=nt):
-            C[t] = 0.0
-    else:
-        for t in prange(M * N, nogil=True, schedule='static'):
-            C[t] = 0.0
+    for t in range(M * N):
+        C[t] = 0.0
 
     if nt > 0:
-        for ii in prange(0, M, BM_TILE, nogil=True,
-                          schedule='static', num_threads=nt):
-            i_end = ii + BM_TILE if ii + BM_TILE < M else M
+        for ii in prange(n_i, nogil=True, schedule='static', num_threads=nt):
+
+            i0 = ii * BM_TILE
+            i_end = i0 + BM_TILE if i0 + BM_TILE < M else M
+
             for kk in range(0, K, BK_TILE):
+
                 k_end = kk + BK_TILE if kk + BK_TILE < K else K
+
                 for jj in range(0, N, BN_TILE):
+
                     j_end = jj + BN_TILE if jj + BN_TILE < N else N
+
                     clarion_micro_kernel(
-                        &A[ii * K + kk], &B[kk * N + jj], &C[ii * N + jj],
-                        i_end - ii, k_end - kk, j_end - jj,
-                        K, N, N,
-                    )
-    else:
-        for ii in prange(0, M, BM_TILE, nogil=True, schedule='static'):
-            i_end = ii + BM_TILE if ii + BM_TILE < M else M
-            for kk in range(0, K, BK_TILE):
-                k_end = kk + BK_TILE if kk + BK_TILE < K else K
-                for jj in range(0, N, BN_TILE):
-                    j_end = jj + BN_TILE if jj + BN_TILE < N else N
-                    clarion_micro_kernel(
-                        &A[ii * K + kk], &B[kk * N + jj], &C[ii * N + jj],
-                        i_end - ii, k_end - kk, j_end - jj,
+                        &A[i0 * K + kk],
+                        &B[kk * N + jj],
+                        &C[i0 * N + jj],
+                        i_end - i0,
+                        k_end - kk,
+                        j_end - jj,
                         K, N, N,
                     )
 
+    else:
+        for ii in prange(n_i, nogil=True, schedule='static'):
+
+            i0 = ii * BM_TILE
+            i_end = i0 + BM_TILE if i0 + BM_TILE < M else M
+
+            for kk in range(0, K, BK_TILE):
+
+                k_end = kk + BK_TILE if kk + BK_TILE < K else K
+
+                for jj in range(0, N, BN_TILE):
+
+                    j_end = jj + BN_TILE if jj + BN_TILE < N else N
+
+                    clarion_micro_kernel(
+                        &A[i0 * K + kk],
+                        &B[kk * N + jj],
+                        &C[i0 * N + jj],
+                        i_end - i0,
+                        k_end - kk,
+                        j_end - jj,
+                        K, N, N,
+                    )
 
 # Back-compat alias used by encoder_block.
 #

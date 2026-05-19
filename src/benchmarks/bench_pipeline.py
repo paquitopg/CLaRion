@@ -26,24 +26,21 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 
 import numpy as np
 
 from src.index.builder import (
-    IndexBuilder,
     encode_corpus_parallel,
     encode_corpus_serial,
     make_synthetic_corpus,
     tokenize_corpus,
 )
 from src.index.scorer import (
-    Retriever,
     cosine_cython_omp,
     cosine_numpy,
     top_k_indices,
 )
-from src.models.config import IndexConfig, ModelConfig
+from src.models.config import ModelConfig
 from src.models.encoder import build_encoder
 
 from ._timing import TimingResult, print_table, save_results, time_call

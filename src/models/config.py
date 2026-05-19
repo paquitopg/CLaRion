@@ -36,7 +36,7 @@ class ModelConfig:
 
     # CLaRa-style continuous memory tokens
     n_memory_tokens: int = 8
-    max_doc_len: int = 256
+    max_seq_len: int = 256
 
     # Numerical hygiene
     eps: float = 1e-5
@@ -75,3 +75,25 @@ class BenchConfig:
     n_queries: int = 32
     warmup_iters: int = 3
     measure_iters: int = 10
+
+@dataclass(frozen=True)
+class DecoderConfig:
+    """
+    Configuration STRICTEMENT decoder.
+    Ne dépend pas du encoder ModelConfig.
+    """
+
+    hidden_dim: int = 128
+    n_layers: int = 2
+    n_heads: int = 4
+    ffn_dim: int = 512
+
+    vocab_size: int = 32_000
+    pad_id: int = 0
+
+    eps: float = 1e-5
+    init_scale: float = 0.02
+
+    @property
+    def head_dim(self) -> int:
+        return self.hidden_dim // self.n_heads

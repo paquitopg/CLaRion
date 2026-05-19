@@ -37,7 +37,7 @@ import sys
 
 import numpy as np
 
-from ._timing import TimingResult, print_table, save_results, time_call
+from ._timing import TimingResult, save_results, time_call
 
 try:
     from src.parallel import cython_encoder  # type: ignore

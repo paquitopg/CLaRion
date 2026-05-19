@@ -33,9 +33,9 @@ class ClaraDecoder(nn.Module):
         memory: (B, K, D)
         """
 
-        x = self.embed(input_ids)  # (B, T, D)
+        x = self.embed(input_ids)
 
-        memory = self.mem_proj(memory)  # (B, K, D)
+        memory = self.mem_proj(memory)
 
         h = self.decoder(
             tgt=x,

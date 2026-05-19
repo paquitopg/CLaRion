@@ -31,7 +31,7 @@ import logging
 import os
 import sys
 
-from .loaders import load_corpus, load_qa_dataset, HF_AVAILABLE
+from .loaders import load_corpus, load_qa_dataset
 
 logger = logging.getLogger("clarion.data.cli")
 logging.basicConfig(level=logging.INFO,
@@ -72,9 +72,8 @@ def cmd_bench_on_real(args) -> int:
     from ..models.config import ModelConfig
     from ..models.encoder import build_encoder
     from ..index.builder import (
-        encode_corpus_parallel, encode_corpus_serial, tokenize_corpus,
+        encode_corpus_serial, tokenize_corpus,
     )
-    from ..index.scorer import cosine_cython_omp, cosine_numpy, top_k_indices
     from ..benchmarks._timing import TimingResult, print_table, save_results, time_call
 
     corpus = load_corpus(source=args.source, n_docs=args.n_docs,
