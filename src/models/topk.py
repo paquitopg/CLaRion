@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import time
 import logging
-from typing import Tuple, Optional
+from dataclasses import dataclass
+from typing import Tuple
 
 import numpy as np
 
@@ -11,31 +12,34 @@ from .config import TopKConfig
 logger = logging.getLogger("clara_topk")
 
 
-class TopKBackend:
-    """
-    Abstract Top-K backend (NumPy/Cython only).
-    """
+@dataclass
+class TopKResult:
+    hard: np.ndarray      # (B, N) k-hot mask
+    soft: np.ndarray      # (B, N) soft distribution / relaxation
+    indices: np.ndarray   # (B, K)
+    scores: np.ndarray    # (B, N)
 
+
+class TopKBackend:
     def __init__(self, config: TopKConfig):
         self.config = config
 
-    def forward(self, logits: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def forward(self, logits: np.ndarray) -> TopKResult:
+        raise NotImplementedError
+
+    def backward(self, grad_out: np.ndarray, cache: TopKResult) -> np.ndarray:
         raise NotImplementedError
 
     def benchmark(self, logits: np.ndarray, iters: int = 50) -> float:
-
         for _ in range(5):
             self.forward(logits)
 
         start = time.perf_counter()
-
         for _ in range(iters):
             self.forward(logits)
-
         end = time.perf_counter()
 
         return (end - start) / iters
-
 
 class TopKNaive(TopKBackend):
     """
@@ -83,14 +87,13 @@ class TopKNaive(TopKBackend):
         return np.array(hard, dtype=np.float32), np.array(indices, dtype=np.int32)
 
 
-class TopKNumpy(TopKBackend):
+class TopKNumpySTE(TopKBackend):
     """
-    Vectorized NumPy greedy Top-K.
+    Hard top-k in forward, softmax relaxation in backward.
     """
 
-    def forward(self, logits: np.ndarray):
-
-        x = logits
+    def forward(self, logits: np.ndarray) -> TopKResult:
+        x = np.ascontiguousarray(logits, dtype=np.float32)
 
         B, N = x.shape
         K = self.config.k
@@ -98,21 +101,40 @@ class TopKNumpy(TopKBackend):
 
         scaled = x / temp
 
-        hard = np.zeros((B, K, N), dtype=np.float32)
-        indices = np.zeros((B, K), dtype=np.int32)
-        taken = np.zeros((B, N), dtype=np.float32)
+        idx_part = np.argpartition(scaled, -K, axis=1)[:, -K:]
+        top_vals = np.take_along_axis(scaled, idx_part, axis=1)
+        order = np.argsort(-top_vals, axis=1)
+        indices = np.take_along_axis(idx_part, order, axis=1).astype(np.int32)
 
-        for b in range(B):
-            for j in range(K):
+        hard = np.zeros((B, N), dtype=np.float32)
+        row_ids = np.arange(B)[:, None]
+        hard[row_ids, indices] = 1.0
 
-                scores = scaled[b] + np.log(1.0 - taken[b] + 1e-8)
-                idx = int(np.argmax(scores))
+        shifted = scaled - np.max(scaled, axis=1, keepdims=True)
+        exp = np.exp(shifted)
+        soft = exp / (np.sum(exp, axis=1, keepdims=True) + 1e-12)
+        soft = soft.astype(np.float32, copy=False)
 
-                hard[b, j, idx] = 1.0
-                indices[b, j] = idx
-                taken[b, idx] = 1.0
+        return TopKResult(
+            hard=hard,
+            soft=soft,
+            indices=indices,
+            scores=x,
+        )
 
-        return hard, indices
+    def backward(self, grad_out: np.ndarray, cache: TopKResult) -> np.ndarray:
+        """
+        Backward through the soft relaxation only.
+        grad_out: dL/dy where y is treated as soft selection weights (B, N)
+        returns dL/dlogits (B, N)
+        """
+        grad_out = np.ascontiguousarray(grad_out, dtype=np.float32)
+        soft = cache.soft
+        temp = max(self.config.temperature, 1e-6)
+
+        dot = np.sum(grad_out * soft, axis=1, keepdims=True)
+        grad_logits = (soft * (grad_out - dot)) / temp
+        return np.ascontiguousarray(grad_logits, dtype=np.float32)
 
 
 try:
@@ -122,46 +144,59 @@ except Exception:
     CYTHON_AVAILABLE = False
 
 
-class TopKCython(TopKBackend):
-    """
-    Cython accelerated greedy Top-K.
-    """
-
+class TopKCythonSTE(TopKBackend):
     def __init__(self, config: TopKConfig):
         super().__init__(config)
-
         if not CYTHON_AVAILABLE:
             raise RuntimeError("Cython backend not available")
 
-    def forward(self, logits: np.ndarray):
-
-        indices = greedy_topk_fast(logits, self.config.k)
-
-        B, N = logits.shape
+    def forward(self, logits: np.ndarray) -> TopKResult:
+        x = np.ascontiguousarray(logits, dtype=np.float32)
+        B, N = x.shape
         K = self.config.k
+        temp = max(self.config.temperature, 1e-6)
 
-        hard = np.zeros((B, K, N), dtype=np.float32)
-        taken = np.zeros((B, N), dtype=np.float32)
+        scaled = np.ascontiguousarray(x / temp, dtype=np.float32)
 
-        for b in range(B):
-            for j in range(K):
-                idx = indices[b, j]
-                hard[b, j, idx] = 1.0
-                taken[b, idx] = 1.0
+        indices = greedy_topk_fast(scaled, K)
+        indices = np.ascontiguousarray(indices, dtype=np.int32)
 
-        return hard, indices
+        hard = np.zeros((B, N), dtype=np.float32)
+        rows = np.arange(B)[:, None]
+        hard[rows, indices] = 1.0
+
+        shifted = scaled - np.max(scaled, axis=1, keepdims=True)
+        exp = np.exp(shifted)
+        soft = exp / (np.sum(exp, axis=1, keepdims=True) + 1e-12)
+        soft = np.ascontiguousarray(soft, dtype=np.float32)
+
+        return TopKResult(
+            hard=hard,
+            soft=soft,
+            indices=indices,
+            scores=x,
+        )
+
+    def backward(self, grad_out: np.ndarray, cache: TopKResult) -> np.ndarray:
+        grad_out = np.ascontiguousarray(grad_out, dtype=np.float32)
+        soft = cache.soft
+        temp = max(self.config.temperature, 1e-6)
+
+        dot = np.sum(grad_out * soft, axis=1, keepdims=True)
+        grad_logits = (soft * (grad_out - dot)) / temp
+        return np.ascontiguousarray(grad_logits, dtype=np.float32)
 
 
 def build_topk(config: TopKConfig, backend: str = "numpy") -> TopKBackend:
 
     if backend == "numpy":
-        return TopKNumpy(config)
+        return TopKNumpySTE(config)
 
     if backend == "python":
         return TopKNaive(config)
 
     if backend == "cython":
-        return TopKCython(config)
+        return TopKCythonSTE(config)
 
     raise ValueError(f"Unknown backend: {backend}")
 
@@ -176,7 +211,7 @@ def main():
     cfg = TopKConfig(k=8, temperature=1.0)
 
     logger.info("Benchmark NumPy")
-    m2 = TopKNumpy(cfg)
+    m2 = TopKNumpySTE(cfg)
     t2 = m2.benchmark(logits)
 
     logger.info("Benchmark Naive")
@@ -187,7 +222,7 @@ def main():
 
     if CYTHON_AVAILABLE:
         logger.info("Benchmark Cython")
-        m3 = TopKCython(cfg)
+        m3 = TopKCythonSTE(cfg)
         t3 = m3.benchmark(logits)
 
         logger.info(f"Cython: {t3:.6f}s")

@@ -1,29 +1,5 @@
-"""
-CLaRiON Encoder (the "compressor" in CLaRa).
-
-A tiny 2-layer transformer that compresses a document into a small set of
-memory-token embeddings. Architecture mirrors Apple R&D's CLaRa
-(https://github.com/apple/ml-clara), section 2.2, at toy scale:
-
-    1.  Embed token ids of the document.
-    2.  Append `n_memory_tokens` learnable memory tokens at the tail.
-    3.  Run `n_layers` blocks of (causal self-attention + FFN), pre-norm.
-    4.  Slice out the final-layer hidden states of the memory-token positions
-        and return them flattened as a single (B, l*hidden) vector per doc.
-
-Two execution backends are exposed:
-
-- `EncoderNumpy`:        pure numpy. The "baseline" — implicitly BLAS-threaded
-                         for the matmuls, but otherwise serial.
-- `EncoderCython`:       same architecture, hot kernels delegated to the
-                         OpenMP-parallel Cython module `src.parallel.cython_encoder`.
-
-Per the project framing (Xavier's email: "vous n'avez pas besoin que le
-modèle retourne des réponses correctes, juste qu'il aille plus vite"), the
-weights are random-initialized once and the forward pass is exercised only
-for timing.
-"""
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -37,8 +13,10 @@ logger = logging.getLogger("clarion.encoder")
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(name)s] %(levelname)s: %(message)s"))
+    handler.setStream(handler.stream)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+
 
 @dataclass
 class TransformerLayerParams:
@@ -182,6 +160,10 @@ class EncoderBackend:
         self.config = config
         self.params = params or _init_params(config)
 
+        H = self.config.hidden_dim
+        self.retrieval_proj = np.eye(H, dtype=np.float32)
+        self.query_bias = np.zeros(H, dtype=np.float32)
+
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
         """Return memory token states."""
         raise NotImplementedError
@@ -191,12 +173,32 @@ class EncoderBackend:
         token_ids: np.ndarray,
         pooling: str = "mean",
     ) -> np.ndarray:
-        """Return pooled retrieval embedding."""
-        return pool_memory(self.forward(token_ids), pooling)
+        """Return pooled retrieval embedding (with trainable head)."""
+        raise NotImplementedError
+
+    def backward_query(
+        self,
+        token_ids: np.ndarray,
+        grad_query: np.ndarray,
+        lr: float = 1e-3,
+    ) -> None:
+        """
+        Update retrieval head given gradient w.r.t. query.
+
+        grad_query: dL/dquery, shape (B, H)
+        Updated:
+          - self.retrieval_proj (H, H)
+          - self.query_bias (H,)
+        """
+        raise NotImplementedError
 
 
 class EncoderNumpy(EncoderBackend):
     """Pure NumPy encoder implementation."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_pooled: np.ndarray | None = None
 
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
 
@@ -237,6 +239,47 @@ class EncoderNumpy(EncoderBackend):
             dtype=np.float32,
         )
 
+    def encode_retrieval(
+        self,
+        token_ids: np.ndarray,
+        pooling: str = "mean",
+    ) -> np.ndarray:
+        mem_states = self.forward(token_ids)
+        pooled = pool_memory(mem_states, pooling)
+
+        self._last_pooled = pooled
+
+        query = pooled @ self.retrieval_proj + self.query_bias
+        query = np.ascontiguousarray(query, dtype=np.float32)
+
+        return query
+
+    def backward_query(
+        self,
+        token_ids: np.ndarray,
+        grad_query: np.ndarray,
+        lr: float = 1e-3,
+    ) -> None:
+        """
+        Update retrieval_proj and query_bias using grad_query.
+
+        grad_query: dL/dquery, shape (B, H)
+        """
+        pooled = self._last_pooled
+        if pooled is None:
+
+            mem_states = self.forward(token_ids)
+            pooled = pool_memory(mem_states, "mean")
+            self._last_pooled = pooled
+
+        B, H = pooled.shape
+
+        grad_W = pooled.T @ grad_query / max(B, 1)
+        b = grad_query.mean(axis=0)
+
+        self.retrieval_proj -= lr * grad_W.astype(np.float32)
+        self.query_bias -= lr * b.astype(np.float32)
+
 
 class EncoderCython(EncoderBackend):
     def __init__(
@@ -249,6 +292,7 @@ class EncoderCython(EncoderBackend):
         self.num_threads = num_threads if num_threads and num_threads > 0 else 1
         self._available = False
         self._params_prepared = False
+        self._last_pooled: np.ndarray | None = None
 
         try:
             from src.parallel import cython_encoder
@@ -338,6 +382,42 @@ class EncoderCython(EncoderBackend):
             x[:, -cfg.n_memory_tokens:, :],
             dtype=np.float32,
         )
+
+    def encode_retrieval(
+        self,
+        token_ids: np.ndarray,
+        pooling: str = "mean",
+    ) -> np.ndarray:
+        mem_states = self.forward(token_ids)
+        pooled = pool_memory(mem_states, pooling)
+
+        self._last_pooled = pooled
+
+        query = pooled @ self.retrieval_proj + self.query_bias
+        query = np.ascontiguousarray(query, dtype=np.float32)
+
+        return query
+
+    def backward_query(
+        self,
+        token_ids: np.ndarray,
+        grad_query: np.ndarray,
+        lr: float = 1e-3,
+    ) -> None:
+        pooled = self._last_pooled
+        if pooled is None:
+            mem_states = self.forward(token_ids)
+            pooled = pool_memory(mem_states, "mean")
+            self._last_pooled = pooled
+
+        B, H = pooled.shape
+
+        grad_W = pooled.T @ grad_query / max(B, 1)
+        b = grad_query.mean(axis=0)
+
+        self.retrieval_proj -= lr * grad_W.astype(np.float32)
+        self.query_bias -= lr * b.astype(np.float32)
+
 
 def build_encoder(
     config: ModelConfig,

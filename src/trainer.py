@@ -160,6 +160,8 @@ def run_experiment(backend: str):
 
     loss_backend = backend
     ignore_index = 0
+    lr_decoder = 1e-3
+    lr_query = 1e-3
 
     with perf.track("config.build"):
         cfg = ModelConfig(
@@ -276,7 +278,7 @@ def run_experiment(backend: str):
             sample_t0 = time.perf_counter()
 
             with perf.track("train.forward"):
-                logits, aux = pipeline.forward(
+                logits, indices = pipeline.forward(
                     input_ids=input_ids,
                     bank=bank,
                 )
@@ -289,10 +291,18 @@ def run_experiment(backend: str):
                     backend=loss_backend,
                 )
 
-            with perf.track("train.backward"):
-                decoder.backward(
+            with perf.track("train.backward.decoder"):
+                grad_memory = decoder.backward(
                     grad_logits,
-                    lr=1e-3,
+                    lr=lr_decoder,
+                    return_grad_memory=True,
+                )
+
+            with perf.track("train.backward.retrieval"):
+                grad_query = pipeline.backward(
+                    input_ids=input_ids,
+                    grad_memory=grad_memory,
+                    lr=lr_query,
                 )
 
             sample_dt = time.perf_counter() - sample_t0
@@ -302,6 +312,7 @@ def run_experiment(backend: str):
             print(
                 f"[{backend}] epoch={epoch} step={step} "
                 f"loss={float(loss):.6f} "
+                f"query_grad_norm={float(np.linalg.norm(grad_query)):.6f} "
                 f"sample_time={sample_dt:.6f}s",
                 flush=True,
             )

@@ -71,6 +71,7 @@ class BenchConfig:
     warmup_iters: int = 3
     measure_iters: int = 10
 
+
 @dataclass(frozen=True)
 class TopKConfig:
     """
@@ -83,6 +84,7 @@ class TopKConfig:
     k: int = 8
     temperature: float = 1.0
     seed: int = 0
+
 
 @dataclass(frozen=True)
 class LossConfig:
@@ -156,9 +158,30 @@ class DecoderConfig:
             and self.vocab_size > 0
         )
 
+
+@dataclass(frozen=True)
+class TensorEngineConfig:
+    eps: float = 1e-12
+    use_cython: bool = True
+    num_threads: int = 0
+    check_shapes: bool = True
+    debug: bool = False
+
+
+@dataclass(frozen=True)
+class OptimizerConfig:
+    lr: float = 1e-3
+    betas: tuple[float, float] = (0.9, 0.999)
+    eps: float = 1e-8
+    weight_decay: float = 0.0
+    use_cython: bool = True
+    num_threads: int = 0
+
+
 @dataclass
 class SystemConfig:
     encoder: ModelConfig
     decoder: DecoderConfig
     topk: TopKConfig
+    tensor: TensorEngineConfig
     backend: str = "numpy"

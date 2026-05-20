@@ -10,6 +10,9 @@ class DecoderBackend:
     def __init__(self, config: DecoderConfig, params=None):
         self.config = config
         self.params = params
+        self.last_hidden: np.ndarray | None = None
+        self.last_memory: np.ndarray | None = None
+        self.last_mem_proj: np.ndarray | None = None
 
     def forward(
         self,
@@ -22,7 +25,9 @@ class DecoderBackend:
         self,
         grad_logits: np.ndarray,
         lr: float = 1e-3,
-    ):
+        return_grad_memory: bool = False,
+        update_mem_proj: bool = False,
+    ) -> np.ndarray | None:
         raise NotImplementedError
 
     def generate(
@@ -38,7 +43,7 @@ class DecoderBackend:
 
         for _ in range(max_new_tokens):
             logits = self.forward(generated, memory)
-            logits = logits[:, -1, :] / temperature
+            logits = logits[:, -1, :] / max(temperature, 1e-6)
             logits = logits - np.max(logits, axis=-1, keepdims=True)
 
             probs = np.exp(logits)
@@ -68,7 +73,7 @@ class DecoderBackend:
         return generated
 
 
-def init_decoder_weights(cfg):
+def init_decoder_weights(cfg: DecoderConfig):
     rng = np.random.default_rng(42)
 
     def randn(*shape):
@@ -159,13 +164,16 @@ class DecoderNumpy(DecoderBackend):
         memory = np.asarray(memory, dtype=np.float32)
 
         x = weights["embed"][input_ids]
-        memory = memory @ weights["mem_proj"]
+        mem = np.ascontiguousarray(memory @ weights["mem_proj"], dtype=np.float32)
+
+        self.last_memory = np.ascontiguousarray(memory, dtype=np.float32)
+        self.last_mem_proj = mem
 
         for layer in weights["layers"]:
             h = _rms_norm(x, layer["norm1"], cfg.eps)
             x = x + _cross_attention(
                 h,
-                memory,
+                mem,
                 layer["Wq"],
                 layer["Wk"],
                 layer["Wv"],
@@ -185,20 +193,67 @@ class DecoderNumpy(DecoderBackend):
 
         self.last_hidden = np.ascontiguousarray(x, dtype=np.float32)
         logits = x @ weights["lm_head"]
-        return logits.astype(np.float32)
+        return np.ascontiguousarray(logits, dtype=np.float32)
 
-    def backward(self, grad_logits, lr=1e-3):
+    def backward(
+        self,
+        grad_logits,
+        lr=1e-3,
+        return_grad_memory=False,
+        update_mem_proj=False,
+    ):
+        if self.last_hidden is None:
+            raise RuntimeError("forward() must be called before backward().")
+
         weights = self.params
-        x = self.last_hidden[:, :-1, :]
+        grad_logits = np.ascontiguousarray(grad_logits, dtype=np.float32)
+        hidden = np.ascontiguousarray(self.last_hidden[:, :-1, :], dtype=np.float32)
 
-        B, T, H = x.shape
+        if grad_logits.ndim != 3:
+            raise ValueError(f"grad_logits must be 3D, got {grad_logits.shape}")
+        if grad_logits.shape[:2] != hidden.shape[:2]:
+            raise ValueError(f"Mismatch hidden={hidden.shape} vs grad_logits={grad_logits.shape}")
+
+        B, T, H = hidden.shape
         V = grad_logits.shape[-1]
 
-        x_flat = x.reshape(-1, H)
-        g_flat = grad_logits.reshape(-1, V)
+        hidden_flat = hidden.reshape(-1, H)
+        grad_flat = grad_logits.reshape(-1, V)
 
-        grad_lm_head = x_flat.T @ g_flat
-        weights["lm_head"] -= lr * grad_lm_head.astype(np.float32)
+        lm_head_before = np.ascontiguousarray(weights["lm_head"], dtype=np.float32)
+
+        grad_lm_head = np.ascontiguousarray(hidden_flat.T @ grad_flat, dtype=np.float32)
+        grad_hidden = np.ascontiguousarray(grad_flat @ lm_head_before.T, dtype=np.float32)
+        grad_hidden = grad_hidden.reshape(B, T, H)
+
+        weights["lm_head"] -= lr * grad_lm_head
+
+        if not return_grad_memory:
+            return None
+
+        if self.last_memory is None:
+            raise RuntimeError("forward() must cache memory before backward().")
+
+        last_memory = np.ascontiguousarray(self.last_memory, dtype=np.float32)
+        S = last_memory.shape[1]
+
+        grad_mem_proj_shared = np.ascontiguousarray(grad_hidden.mean(axis=1), dtype=np.float32)
+        grad_memory_shared = np.ascontiguousarray(
+            grad_mem_proj_shared @ weights["mem_proj"].T, dtype=np.float32
+        )
+
+        if update_mem_proj:
+            grad_mem_proj_w = np.zeros((H, H), dtype=np.float32)
+            for b in range(B):
+                for s in range(S):
+                    grad_mem_proj_w += np.outer(last_memory[b, s], grad_mem_proj_shared[b])
+            grad_mem_proj_w /= max(B * S, 1)
+            weights["mem_proj"] -= lr * np.ascontiguousarray(grad_mem_proj_w, dtype=np.float32)
+
+        grad_memory = np.empty((B, S, H), dtype=np.float32)
+        grad_memory[:] = grad_memory_shared[:, None, :]
+
+        return grad_memory
 
 
 class DecoderCython(DecoderBackend):
@@ -245,8 +300,16 @@ class DecoderCython(DecoderBackend):
         input_ids = np.asarray(input_ids, dtype=np.int64)
         memory = np.asarray(memory, dtype=np.float32)
 
-        x = np.ascontiguousarray(w["embed"][input_ids], dtype=np.float32)
-        mem = np.ascontiguousarray(memory @ w["mem_proj"], dtype=np.float32)
+        x = w["embed"][input_ids]
+        if not x.flags["C_CONTIGUOUS"] or x.dtype != np.float32:
+            x = np.ascontiguousarray(x, dtype=np.float32)
+
+        mem = memory @ w["mem_proj"]
+        if not mem.flags["C_CONTIGUOUS"] or mem.dtype != np.float32:
+            mem = np.ascontiguousarray(mem, dtype=np.float32)
+
+        self.last_memory = memory if (memory.flags["C_CONTIGUOUS"] and memory.dtype == np.float32) else np.ascontiguousarray(memory, dtype=np.float32)
+        self.last_mem_proj = mem
 
         for layer in w["layers"]:
             x = self._ext.decoder_forward_cython(
@@ -269,27 +332,72 @@ class DecoderCython(DecoderBackend):
             cfg.eps,
         )
 
-        self.last_hidden = np.ascontiguousarray(x, dtype=np.float32)
+        self.last_hidden = x if (x.flags["C_CONTIGUOUS"] and x.dtype == np.float32) else np.ascontiguousarray(x, dtype=np.float32)
+        logits = self._ext.project_lm_head(self.last_hidden, w["lm_head"])
+        return logits if (logits.flags["C_CONTIGUOUS"] and logits.dtype == np.float32) else np.ascontiguousarray(logits, dtype=np.float32)
 
-        logits = self._ext.project_lm_head(
-            self.last_hidden,
-            w["lm_head"],
-        )
-        return np.asarray(logits, dtype=np.float32)
-
-    def backward(self, grad_logits, lr=1e-3):
+    def backward(
+        self,
+        grad_logits,
+        lr=1e-3,
+        return_grad_memory=False,
+        update_mem_proj=False,
+    ):
         if not self._available:
-            return DecoderNumpy(self.config, self.params).backward(grad_logits, lr)
+            return DecoderNumpy(self.config, self.params).backward(
+                grad_logits,
+                lr=lr,
+                return_grad_memory=return_grad_memory,
+                update_mem_proj=update_mem_proj,
+            )
 
+        if self.last_hidden is None:
+            raise RuntimeError("forward() must be called before backward().")
+        if self.last_memory is None and return_grad_memory:
+            raise RuntimeError("forward() must cache memory before backward().")
+
+        weights = self.params
         grad_logits = np.ascontiguousarray(grad_logits, dtype=np.float32)
         hidden = np.ascontiguousarray(self.last_hidden[:, :-1, :], dtype=np.float32)
 
-        self._ext.decoder_backward_lm_head(
-            hidden,
-            grad_logits,
-            self.params["lm_head"],
-            lr,
+        if grad_logits.shape[:2] != hidden.shape[:2]:
+            raise ValueError(
+                f"Mismatch hidden={hidden.shape} vs grad_logits={grad_logits.shape}"
+            )
+
+        B, T, H = hidden.shape
+        V = grad_logits.shape[-1]
+        S = self.last_memory.shape[1]
+
+        lm_head_before = np.ascontiguousarray(weights["lm_head"], dtype=np.float32).copy()
+
+        grad_flat = grad_logits.reshape(-1, V)
+        grad_hidden = np.ascontiguousarray(grad_flat @ lm_head_before.T, dtype=np.float32)
+        grad_hidden = grad_hidden.reshape(B, T, H)
+
+        grad_mem_proj_shared = np.ascontiguousarray(
+            grad_hidden.mean(axis=1), dtype=np.float32
         )
+        grad_memory_shared = np.ascontiguousarray(
+            grad_mem_proj_shared @ weights["mem_proj"].T, dtype=np.float32
+        )
+
+        if update_mem_proj:
+            grad_mem_proj_full = np.broadcast_to(
+                grad_mem_proj_shared[:, None, :],
+                (B, S, H),
+            )
+            grad_mem_proj_w = (
+                self.last_memory.reshape(-1, H).T @ grad_mem_proj_full.reshape(-1, H)
+            ) / max(B * S, 1)
+            weights["mem_proj"] -= lr * np.ascontiguousarray(grad_mem_proj_w, dtype=np.float32)
+
+        grad_memory = np.broadcast_to(
+            grad_memory_shared[:, None, :],
+            (B, S, H),
+        ).copy()
+
+        return grad_memory
 
 
 def build_decoder(config, backend="numpy", **kwargs):
@@ -299,6 +407,10 @@ def build_decoder(config, backend="numpy", **kwargs):
         return DecoderNumpy(config, params=params)
 
     if backend == "cython":
-        return DecoderCython(config, params=params, num_threads=kwargs.get("num_threads", 0))
+        return DecoderCython(
+            config,
+            params=params,
+            num_threads=kwargs.get("num_threads", 0),
+        )
 
     raise ValueError(f"Unknown backend: {backend}")
