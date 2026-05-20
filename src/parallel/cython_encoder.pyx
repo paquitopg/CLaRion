@@ -41,7 +41,7 @@ cdef inline void _rms_norm_3d_parallel(
             for h in range(H):
                 tmp = x[b, t, h]
                 ss = ss + tmp * tmp
-            inv = 1.0 / sqrtf(ss / H + eps)
+            inv = 1.0 / sqrtf(ss / <float>H + eps)
             for h in range(H):
                 out[b, t, h] = x[b, t, h] * inv * scale[h]
 
@@ -75,7 +75,7 @@ cdef inline void _gelu_inplace_2d_parallel(
             x[i, j] = fast_gelu_scalar(x[i, j])
 
 
-cdef void _streaming_attention_blockwise_parallel(
+cdef void _streaming_attention_blockwise(
     float[:, :, ::1] Q,
     float[:, :, ::1] K,
     float[:, :, ::1] V,
@@ -83,87 +83,83 @@ cdef void _streaming_attention_blockwise_parallel(
     float[:, :, ::1] ctx,
     int n_heads,
     int head_dim,
-    int block_size,
-    int num_threads
+    int block_size
 ) noexcept nogil:
     cdef int B = Q.shape[0]
     cdef int L = Q.shape[1]
 
-    cdef int bt, b, t
-    cdef int hh, s, d, s0, s1, off
+    cdef int b, t, hh, s, d, s0, s1, off
     cdef float scale = 1.0 / sqrtf(<float>head_dim)
     cdef float score
     cdef float m_old, m_new, d_old, d_new, w, alpha
     cdef float acc
 
-    for bt in prange(B * L, nogil=True, schedule='static', num_threads=num_threads):
-        b = bt // L
-        t = bt % L
+    for b in range(B):
+        for t in range(L):
+            for hh in range(n_heads):
+                off = hh * head_dim
+                m_old = NEG_INF
+                d_old = 0.0
 
-        for hh in range(n_heads):
-            off = hh * head_dim
-            m_old = NEG_INF
-            d_old = 0.0
+                for d in range(head_dim):
+                    ctx[b, t, off + d] = 0.0
 
-            for d in range(head_dim):
-                ctx[b, t, off + d] = 0.0
+                s0 = 0
+                while s0 < L:
+                    s1 = s0 + block_size
+                    if s1 > L:
+                        s1 = L
 
-            s0 = 0
-            while s0 < L:
-                s1 = s0 + block_size
-                if s1 > L:
-                    s1 = L
+                    m_new = m_old
 
-                m_new = m_old
+                    for s in range(s0, s1):
+                        if mask[b, s] == 0:
+                            continue
 
-                for s in range(s0, s1):
-                    if mask[b, s] == 0:
+                        acc = 0.0
+                        for d in range(head_dim):
+                            acc = acc + Q[b, t, off + d] * K[b, s, off + d]
+                        score = acc * scale
+
+                        if score > m_new:
+                            m_new = score
+
+                    if m_new == NEG_INF:
+                        s0 = s1
                         continue
 
-                    acc = 0.0
+                    if m_old == NEG_INF:
+                        alpha = 0.0
+                    else:
+                        alpha = expf(m_old - m_new)
+
                     for d in range(head_dim):
-                        acc = acc + Q[b, t, off + d] * K[b, s, off + d]
-                    score = acc * scale
+                        ctx[b, t, off + d] = ctx[b, t, off + d] * alpha
 
-                    if score > m_new:
-                        m_new = score
+                    d_new = d_old * alpha
 
-                if m_new == NEG_INF:
+                    for s in range(s0, s1):
+                        if mask[b, s] == 0:
+                            continue
+
+                        acc = 0.0
+                        for d in range(head_dim):
+                            acc = acc + Q[b, t, off + d] * K[b, s, off + d]
+                        score = acc * scale
+
+                        w = expf(score - m_new)
+                        d_new = d_new + w
+
+                        for d in range(head_dim):
+                            ctx[b, t, off + d] = ctx[b, t, off + d] + w * V[b, s, off + d]
+
+                    m_old = m_new
+                    d_old = d_new
                     s0 = s1
-                    continue
 
-                if m_old == NEG_INF:
-                    alpha = 0.0
-                else:
-                    alpha = expf(m_old - m_new)
-
-                for d in range(head_dim):
-                    ctx[b, t, off + d] = ctx[b, t, off + d] * alpha
-
-                d_new = d_old * alpha
-
-                for s in range(s0, s1):
-                    if mask[b, s] == 0:
-                        continue
-
-                    acc = 0.0
+                if d_old > 0.0:
                     for d in range(head_dim):
-                        acc = acc + Q[b, t, off + d] * K[b, s, off + d]
-                    score = acc * scale
-
-                    w = expf(score - m_new)
-                    d_new = d_new + w
-
-                    for d in range(head_dim):
-                        ctx[b, t, off + d] = ctx[b, t, off + d] + w * V[b, s, off + d]
-
-                m_old = m_new
-                d_old = d_new
-                s0 = s1
-
-            if d_old > 0.0:
-                for d in range(head_dim):
-                    ctx[b, t, off + d] = ctx[b, t, off + d] / d_old
+                        ctx[b, t, off + d] = ctx[b, t, off + d] / d_old
 
 
 @cython.boundscheck(False)
@@ -191,6 +187,8 @@ cpdef np.ndarray[F32, ndim=3] encoder_block_hybrid_blockwise(
 
     if H != n_heads * head_dim:
         raise ValueError("hidden_dim must equal n_heads * head_dim")
+    if attention_mask.shape[0] != B or attention_mask.shape[1] != L:
+        raise ValueError("attention_mask must have shape (B, L)")
     if num_threads <= 0:
         num_threads = 1
     if block_size <= 0:
@@ -221,9 +219,15 @@ cpdef np.ndarray[F32, ndim=3] encoder_block_hybrid_blockwise(
     cdef float[:, :, ::1] Vv = V
 
     with nogil:
-        _streaming_attention_blockwise_parallel(
-            Qv, Kv, Vv, mask, ctxv,
-            n_heads, head_dim, block_size, num_threads
+        _streaming_attention_blockwise(
+            Qv,
+            Kv,
+            Vv,
+            mask,
+            ctxv,
+            n_heads,
+            head_dim,
+            block_size,
         )
 
     cdef np.ndarray[F32, ndim=3] proj = np.ascontiguousarray(ctx @ Wo, dtype=np.float32)
@@ -235,15 +239,21 @@ cpdef np.ndarray[F32, ndim=3] encoder_block_hybrid_blockwise(
 
     cdef np.ndarray[F32, ndim=2] ff1 = np.ascontiguousarray(
         h2.reshape(B * L, H) @ W1,
-        dtype=np.float32
+        dtype=np.float32,
     )
     cdef float[:, ::1] ff1v = ff1
 
     with nogil:
         _gelu_inplace_2d_parallel(ff1v, num_threads)
 
-    cdef np.ndarray[F32, ndim=2] ff2_2d = np.ascontiguousarray(ff1 @ W2, dtype=np.float32)
-    cdef np.ndarray[F32, ndim=3] ff2 = np.ascontiguousarray(ff2_2d.reshape(B, L, H), dtype=np.float32)
+    cdef np.ndarray[F32, ndim=2] ff2_2d = np.ascontiguousarray(
+        ff1 @ W2,
+        dtype=np.float32,
+    )
+    cdef np.ndarray[F32, ndim=3] ff2 = np.ascontiguousarray(
+        ff2_2d.reshape(B, L, H),
+        dtype=np.float32,
+    )
     cdef float[:, :, ::1] ff2v = ff2
 
     with nogil:

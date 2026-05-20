@@ -200,6 +200,35 @@ def build_topk(config: TopKConfig, backend: str = "numpy") -> TopKBackend:
 
     raise ValueError(f"Unknown backend: {backend}")
 
+def topk_state_dict(topk: TopKBackend) -> dict[str, np.ndarray]:
+    """
+    TopK has no trainable weights in the current implementation.
+    We still serialize its effective config so the joint checkpoint fully
+    describes the retrieval stage used during training/inference.
+    """
+    cfg = topk.config
+    return {
+        "topk.k": np.asarray([cfg.k], dtype=np.int32),
+        "topk.temperature": np.asarray([cfg.temperature], dtype=np.float32),
+        "topk.has_trainable_params": np.asarray([0], dtype=np.int32),
+    }
+
+
+def load_topk_state_dict(topk: TopKBackend, ckpt, strict: bool = True) -> None:
+    """
+    Restore TopK config from checkpoint.
+    """
+    ckpt_k = int(ckpt["topk.k"][0])
+    ckpt_temp = float(ckpt["topk.temperature"][0])
+
+    if strict and topk.config.k != ckpt_k:
+        raise ValueError(
+            f"TopK k mismatch: checkpoint={ckpt_k}, model={topk.config.k}"
+        )
+
+    topk.config.k = ckpt_k
+    topk.config.temperature = ckpt_temp
+
 
 def main():
 

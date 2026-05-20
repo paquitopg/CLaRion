@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -9,11 +10,11 @@ import numpy as np
 from .config import ModelConfig
 from .memory import MemoryTokens
 
+
 logger = logging.getLogger("clarion.encoder")
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(name)s] %(levelname)s: %(message)s"))
-    handler.setStream(handler.stream)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
@@ -26,10 +27,8 @@ class TransformerLayerParams:
     Wk: np.ndarray
     Wv: np.ndarray
     Wo: np.ndarray
-
     W1: np.ndarray
     W2: np.ndarray
-
     norm1: np.ndarray
     norm2: np.ndarray
 
@@ -47,39 +46,36 @@ class EncoderParams:
 
 def _init_params(config: ModelConfig) -> EncoderParams:
     """Initialize encoder parameters with Gaussian weights."""
-
     rng = np.random.default_rng(config.rng_seed)
 
-    H = config.hidden_dim
-    F = config.ffn_dim
+    h = config.hidden_dim
+    f = config.ffn_dim
     scale = config.init_scale
-
     max_len = config.max_seq_len + config.n_memory_tokens
 
     def randn(*shape: int) -> np.ndarray:
         return rng.normal(0.0, scale, size=shape).astype(np.float32)
 
     layers: list[TransformerLayerParams] = []
-
     for _ in range(config.n_layers):
         layers.append(
             TransformerLayerParams(
-                Wq=randn(H, H),
-                Wk=randn(H, H),
-                Wv=randn(H, H),
-                Wo=randn(H, H),
-                W1=randn(H, F),
-                W2=randn(F, H),
-                norm1=np.ones(H, dtype=np.float32),
-                norm2=np.ones(H, dtype=np.float32),
+                Wq=randn(h, h),
+                Wk=randn(h, h),
+                Wv=randn(h, h),
+                Wo=randn(h, h),
+                W1=randn(h, f),
+                W2=randn(f, h),
+                norm1=np.ones(h, dtype=np.float32),
+                norm2=np.ones(h, dtype=np.float32),
             )
         )
 
     return EncoderParams(
-        embed=randn(config.vocab_size, H),
-        pos_embed=randn(max_len, H),
+        embed=randn(config.vocab_size, h),
+        pos_embed=randn(max_len, h),
         layers=layers,
-        norm_final=np.ones(H, dtype=np.float32),
+        norm_final=np.ones(h, dtype=np.float32),
         memory=MemoryTokens(config),
     )
 
@@ -110,28 +106,24 @@ def _attention_numpy(
     attention_mask: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """Multi-head self-attention."""
+    bsz, seq_len, hidden = x.shape
 
-    B, L, H = x.shape
+    q = x @ layer.Wq
+    k = x @ layer.Wk
+    v = x @ layer.Wv
 
-    Q = x @ layer.Wq
-    K = x @ layer.Wk
-    V = x @ layer.Wv
+    q = q.reshape(bsz, seq_len, n_heads, head_dim).transpose(0, 2, 1, 3)
+    k = k.reshape(bsz, seq_len, n_heads, head_dim).transpose(0, 2, 1, 3)
+    v = v.reshape(bsz, seq_len, n_heads, head_dim).transpose(0, 2, 1, 3)
 
-    Q = Q.reshape(B, L, n_heads, head_dim).transpose(0, 2, 1, 3)
-    K = K.reshape(B, L, n_heads, head_dim).transpose(0, 2, 1, 3)
-    V = V.reshape(B, L, n_heads, head_dim).transpose(0, 2, 1, 3)
-
-    scores = (Q @ K.transpose(0, 1, 3, 2)) / np.sqrt(head_dim)
+    scores = (q @ k.transpose(0, 1, 3, 2)) / np.sqrt(head_dim)
 
     if attention_mask is not None:
         scores = np.where(attention_mask[:, None, None, :], scores, -1e9)
 
     weights = _softmax_lastdim(scores)
-
-    context = weights @ V
-
-    out = context.transpose(0, 2, 1, 3).reshape(B, L, H)
-
+    context = weights @ v
+    out = context.transpose(0, 2, 1, 3).reshape(bsz, seq_len, hidden)
     return out @ layer.Wo
 
 
@@ -160,9 +152,12 @@ class EncoderBackend:
         self.config = config
         self.params = params or _init_params(config)
 
-        H = self.config.hidden_dim
-        self.retrieval_proj = np.eye(H, dtype=np.float32)
-        self.query_bias = np.zeros(H, dtype=np.float32)
+        self.train_retrieval_head = True
+        self.train_memory_tokens = True
+
+        h = self.config.hidden_dim
+        self.retrieval_proj = np.eye(h, dtype=np.float32)
+        self.query_bias = np.zeros(h, dtype=np.float32)
 
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
         """Return memory token states."""
@@ -182,14 +177,7 @@ class EncoderBackend:
         grad_query: np.ndarray,
         lr: float = 1e-3,
     ) -> None:
-        """
-        Update retrieval head given gradient w.r.t. query.
-
-        grad_query: dL/dquery, shape (B, H)
-        Updated:
-          - self.retrieval_proj (H, H)
-          - self.query_bias (H,)
-        """
+        """Update retrieval head and memory tokens from dL/dquery."""
         raise NotImplementedError
 
 
@@ -201,21 +189,19 @@ class EncoderNumpy(EncoderBackend):
         self._last_pooled: np.ndarray | None = None
 
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
-
         cfg = self.config
-        B = token_ids.shape[0]
+        bsz = token_ids.shape[0]
 
         doc_mask = token_ids != cfg.pad_id
-
         doc_h = self.params.embed[token_ids]
-        mem = self.params.memory.expand_to_batch(B)
+        mem = self.params.memory.expand_to_batch(bsz)
 
         x = np.concatenate([doc_h, mem], axis=1)
 
         pos = self.params.pos_embed[: x.shape[1]]
         x = x + pos[None, :, :]
 
-        mem_mask = np.ones((B, cfg.n_memory_tokens), dtype=bool)
+        mem_mask = np.ones((bsz, cfg.n_memory_tokens), dtype=bool)
         attention_mask = np.concatenate([doc_mask, mem_mask], axis=1)
 
         for layer in self.params.layers:
@@ -226,7 +212,6 @@ class EncoderNumpy(EncoderBackend):
                 cfg.head_dim,
                 attention_mask,
             )
-
             x = x + _ffn_numpy(
                 _rms_norm(x, layer.norm2, cfg.eps),
                 layer,
@@ -246,13 +231,10 @@ class EncoderNumpy(EncoderBackend):
     ) -> np.ndarray:
         mem_states = self.forward(token_ids)
         pooled = pool_memory(mem_states, pooling)
-
         self._last_pooled = pooled
 
         query = pooled @ self.retrieval_proj + self.query_bias
-        query = np.ascontiguousarray(query, dtype=np.float32)
-
-        return query
+        return np.ascontiguousarray(query, dtype=np.float32)
 
     def backward_query(
         self,
@@ -260,28 +242,41 @@ class EncoderNumpy(EncoderBackend):
         grad_query: np.ndarray,
         lr: float = 1e-3,
     ) -> None:
-        """
-        Update retrieval_proj and query_bias using grad_query.
-
-        grad_query: dL/dquery, shape (B, H)
-        """
         pooled = self._last_pooled
         if pooled is None:
-
             mem_states = self.forward(token_ids)
             pooled = pool_memory(mem_states, "mean")
             self._last_pooled = pooled
 
-        B, H = pooled.shape
+        grad_query = np.ascontiguousarray(grad_query, dtype=np.float32)
 
-        grad_W = pooled.T @ grad_query / max(B, 1)
-        b = grad_query.mean(axis=0)
+        bsz, hidden = pooled.shape
+        n_mem = self.config.n_memory_tokens
 
-        self.retrieval_proj -= lr * grad_W.astype(np.float32)
-        self.query_bias -= lr * b.astype(np.float32)
+        if self.train_retrieval_head:
+            grad_w = pooled.T @ grad_query / max(bsz, 1)
+            grad_b = grad_query.mean(axis=0)
+            self.retrieval_proj -= lr * grad_w.astype(np.float32)
+            self.query_bias -= lr * grad_b.astype(np.float32)
+
+        if self.train_memory_tokens and n_mem > 0:
+            grad_pooled = grad_query @ self.retrieval_proj.T
+            grad_mem_states = np.broadcast_to(
+                grad_pooled[:, None, :] / float(n_mem),
+                (bsz, n_mem, hidden),
+            ).copy()
+            grad_memory = grad_mem_states.mean(axis=0)
+
+            mem = self.params.memory.weights
+            self.params.memory.weights = np.ascontiguousarray(
+                mem - lr * grad_memory.astype(np.float32),
+                dtype=np.float32,
+            )
 
 
 class EncoderCython(EncoderBackend):
+    """Cython-backed encoder with NumPy fallback."""
+
     def __init__(
         self,
         config: ModelConfig,
@@ -296,6 +291,7 @@ class EncoderCython(EncoderBackend):
 
         try:
             from src.parallel import cython_encoder
+
             self._ext = cython_encoder
             self._available = True
         except Exception as e:
@@ -310,10 +306,11 @@ class EncoderCython(EncoderBackend):
             return
 
         p = self.params
-
         p.embed = np.ascontiguousarray(p.embed, dtype=np.float32)
         p.pos_embed = np.ascontiguousarray(p.pos_embed, dtype=np.float32)
         p.norm_final = np.ascontiguousarray(p.norm_final, dtype=np.float32)
+
+        p.memory.weights= np.ascontiguousarray(p.memory.weights, dtype=np.float32)
 
         for layer in p.layers:
             layer.Wq = np.ascontiguousarray(layer.Wq, dtype=np.float32)
@@ -329,7 +326,9 @@ class EncoderCython(EncoderBackend):
 
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
         if not self._available:
-            return EncoderNumpy(self.config, self.params).forward(token_ids)
+            if not hasattr(self, "_numpy_fallback"):
+                self._numpy_fallback = EncoderNumpy(self.config, self.params)
+            return self._numpy_fallback.forward(token_ids)
 
         if self.params is None:
             raise ValueError("Encoder parameters are not initialized")
@@ -341,17 +340,17 @@ class EncoderCython(EncoderBackend):
         p = self.params
 
         token_ids = np.ascontiguousarray(token_ids, dtype=np.int32)
-        B = token_ids.shape[0]
+        bsz = token_ids.shape[0]
 
         doc_h = p.embed[token_ids]
-        mem = p.memory.expand_to_batch(B).astype(np.float32, copy=False)
+        mem = p.memory.expand_to_batch(bsz).astype(np.float32, copy=False)
 
         x = np.concatenate([doc_h, mem], axis=1)
-        x = x + p.pos_embed[:x.shape[1]][None, :, :]
+        x = x + p.pos_embed[: x.shape[1]][None, :, :]
         x = np.ascontiguousarray(x, dtype=np.float32)
 
         doc_mask = token_ids != cfg.pad_id
-        mem_mask = np.ones((B, cfg.n_memory_tokens), dtype=np.uint8)
+        mem_mask = np.ones((bsz, cfg.n_memory_tokens), dtype=np.uint8)
         attention_mask = np.ascontiguousarray(
             np.concatenate([doc_mask.astype(np.uint8, copy=False), mem_mask], axis=1),
             dtype=np.uint8,
@@ -379,7 +378,7 @@ class EncoderCython(EncoderBackend):
         x = _rms_norm(x, p.norm_final, cfg.eps)
 
         return np.ascontiguousarray(
-            x[:, -cfg.n_memory_tokens:, :],
+            x[:, -cfg.n_memory_tokens :, :],
             dtype=np.float32,
         )
 
@@ -390,13 +389,10 @@ class EncoderCython(EncoderBackend):
     ) -> np.ndarray:
         mem_states = self.forward(token_ids)
         pooled = pool_memory(mem_states, pooling)
-
         self._last_pooled = pooled
 
         query = pooled @ self.retrieval_proj + self.query_bias
-        query = np.ascontiguousarray(query, dtype=np.float32)
-
-        return query
+        return np.ascontiguousarray(query, dtype=np.float32)
 
     def backward_query(
         self,
@@ -410,13 +406,30 @@ class EncoderCython(EncoderBackend):
             pooled = pool_memory(mem_states, "mean")
             self._last_pooled = pooled
 
-        B, H = pooled.shape
+        grad_query = np.ascontiguousarray(grad_query, dtype=np.float32)
 
-        grad_W = pooled.T @ grad_query / max(B, 1)
-        b = grad_query.mean(axis=0)
+        bsz, hidden = pooled.shape
+        n_mem = self.config.n_memory_tokens
 
-        self.retrieval_proj -= lr * grad_W.astype(np.float32)
-        self.query_bias -= lr * b.astype(np.float32)
+        if self.train_retrieval_head:
+            grad_w = pooled.T @ grad_query / max(bsz, 1)
+            grad_b = grad_query.mean(axis=0)
+            self.retrieval_proj -= lr * grad_w.astype(np.float32)
+            self.query_bias -= lr * grad_b.astype(np.float32)
+
+        if self.train_memory_tokens and n_mem > 0:
+            grad_pooled = grad_query @ self.retrieval_proj.T
+            grad_mem_states = np.broadcast_to(
+                grad_pooled[:, None, :] / float(n_mem),
+                (bsz, n_mem, hidden),
+            ).copy()
+            grad_memory = grad_mem_states.mean(axis=0)
+
+            mem = self.params.memory.weights
+            self.params.memory.weights = np.ascontiguousarray(
+                mem - lr * grad_memory.astype(np.float32),
+                dtype=np.float32,
+            )
 
 
 def build_encoder(
@@ -426,7 +439,6 @@ def build_encoder(
     params: Optional[EncoderParams] = None,
 ) -> EncoderBackend:
     """Factory for encoder backends."""
-
     if backend == "numpy":
         return EncoderNumpy(config, params)
 
@@ -434,3 +446,58 @@ def build_encoder(
         return EncoderCython(config, params, num_threads=num_threads)
 
     raise ValueError(f"Unknown backend: {backend}")
+
+
+def save_encoder_weights(encoder: EncoderBackend, path: str) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    p = encoder.params
+    arrays: dict[str, np.ndarray] = {
+        "embed": np.asarray(p.embed, dtype=np.float32),
+        "pos_embed": np.asarray(p.pos_embed, dtype=np.float32),
+        "norm_final": np.asarray(p.norm_final, dtype=np.float32),
+        "memory": np.asarray(p.memory.weights, dtype=np.float32),
+        "retrieval_proj": np.asarray(encoder.retrieval_proj, dtype=np.float32),
+        "query_bias": np.asarray(encoder.query_bias, dtype=np.float32),
+        "n_layers": np.asarray([len(p.layers)], dtype=np.int32),
+    }
+
+    for i, layer in enumerate(p.layers):
+        arrays[f"layers.{i}.Wq"] = np.asarray(layer.Wq, dtype=np.float32)
+        arrays[f"layers.{i}.Wk"] = np.asarray(layer.Wk, dtype=np.float32)
+        arrays[f"layers.{i}.Wv"] = np.asarray(layer.Wv, dtype=np.float32)
+        arrays[f"layers.{i}.Wo"] = np.asarray(layer.Wo, dtype=np.float32)
+        arrays[f"layers.{i}.W1"] = np.asarray(layer.W1, dtype=np.float32)
+        arrays[f"layers.{i}.W2"] = np.asarray(layer.W2, dtype=np.float32)
+        arrays[f"layers.{i}.norm1"] = np.asarray(layer.norm1, dtype=np.float32)
+        arrays[f"layers.{i}.norm2"] = np.asarray(layer.norm2, dtype=np.float32)
+
+    np.savez_compressed(path, **arrays)
+
+
+def load_encoder_weights(encoder: EncoderBackend, path: str) -> None:
+    ckpt = np.load(path)
+    p = encoder.params
+
+    p.embed[...] = ckpt["embed"]
+    p.pos_embed[...] = ckpt["pos_embed"]
+    p.norm_final[...] = ckpt["norm_final"]
+    p.memory.weights[...] = ckpt["memory"]
+
+    encoder.retrieval_proj[...] = ckpt["retrieval_proj"]
+    encoder.query_bias[...] = ckpt["query_bias"]
+
+    n_layers = int(ckpt["n_layers"][0])
+    if n_layers != len(p.layers):
+        raise ValueError(f"Layer mismatch: checkpoint={n_layers}, model={len(p.layers)}")
+
+    for i, layer in enumerate(p.layers):
+        layer.Wq[...] = ckpt[f"layers.{i}.Wq"]
+        layer.Wk[...] = ckpt[f"layers.{i}.Wk"]
+        layer.Wv[...] = ckpt[f"layers.{i}.Wv"]
+        layer.Wo[...] = ckpt[f"layers.{i}.Wo"]
+        layer.W1[...] = ckpt[f"layers.{i}.W1"]
+        layer.W2[...] = ckpt[f"layers.{i}.W2"]
+        layer.norm1[...] = ckpt[f"layers.{i}.norm1"]
+        layer.norm2[...] = ckpt[f"layers.{i}.norm2"]
