@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 import logging
 from dataclasses import dataclass
-from typing import Tuple
 
 import numpy as np
 
@@ -200,34 +199,29 @@ def build_topk(config: TopKConfig, backend: str = "numpy") -> TopKBackend:
 
     raise ValueError(f"Unknown backend: {backend}")
 
+
+
 def topk_state_dict(topk: TopKBackend) -> dict[str, np.ndarray]:
-    """
-    TopK has no trainable weights in the current implementation.
-    We still serialize its effective config so the joint checkpoint fully
-    describes the retrieval stage used during training/inference.
-    """
-    cfg = topk.config
-    return {
-        "topk.k": np.asarray([cfg.k], dtype=np.int32),
-        "topk.temperature": np.asarray([cfg.temperature], dtype=np.float32),
-        "topk.has_trainable_params": np.asarray([0], dtype=np.int32),
-    }
+    d: dict[str, np.ndarray] = {}
+    d["k"] = np.asarray([topk.config.k], dtype=np.int32)
+    d["temperature"] = np.asarray([topk.config.temperature], dtype=np.float32)
+    return d
 
 
-def load_topk_state_dict(topk: TopKBackend, ckpt, strict: bool = True) -> None:
-    """
-    Restore TopK config from checkpoint.
-    """
-    ckpt_k = int(ckpt["topk.k"][0])
-    ckpt_temp = float(ckpt["topk.temperature"][0])
+def load_topk_state_dict(topk: TopKBackend, ckpt: dict[str, np.ndarray], strict: bool = True) -> None:
 
-    if strict and topk.config.k != ckpt_k:
-        raise ValueError(
-            f"TopK k mismatch: checkpoint={ckpt_k}, model={topk.config.k}"
-        )
-
-    topk.config.k = ckpt_k
-    topk.config.temperature = ckpt_temp
+    if "k" in ckpt:
+        ckpt_k = int(ckpt["k"][0])
+        if strict and ckpt_k != topk.config.k:
+            raise ValueError(
+                f"TopK k mismatch: checkpoint={ckpt_k}, model={topk.config.k}"
+            )
+    if "temperature" in ckpt:
+        ckpt_temp = float(ckpt["temperature"][0])
+        if strict and ckpt_temp != topk.config.temperature:
+            raise ValueError(
+                f"TopK temperature mismatch: checkpoint={ckpt_temp}, model={topk.config.temperature}"
+            )
 
 
 def main():

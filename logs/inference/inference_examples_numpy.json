@@ -1,0 +1,42 @@
+[
+  {
+    "example_id": 0,
+    "question": "How many yards did the nephew of Ivory Lee Brown get during his 2004 true freshman season?",
+    "reference_answer": "1,925 yards",
+    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer : annex trades uttercake connector scripture ـ midway programmers... thames weighted conflictdilly sublime pisa thames scripture redwood lebanon triangleskitized gaston",
+    "retrieved_indices": "[7, 14, 5, 15]",
+    "supporting_doc_indices": "[0, 1]"
+  },
+  {
+    "example_id": 1,
+    "question": "Which city is the living place of the director of the romantic comedy Big Stone Gap?",
+    "reference_answer": "New York City",
+    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : filthy...kitized bearded。 domingo henrikitized gaston [unused862] banners angelina... [unused956] furnishings... [unused956] furnishings tesla putin enthusiastically minerals",
+    "retrieved_indices": "[14, 5, 7, 17]",
+    "supporting_doc_indices": "[2, 3]"
+  },
+  {
+    "example_id": 2,
+    "question": "Which city hosted the first modern Olympic Games?",
+    "reference_answer": "Athens",
+    "generated_text": "question : which city hosted the first modern olympic games? answer : savoy claudia liable sinn statutedor furnishings [unused862] bombersdilly jays coronationfia [unused62] claudia liable sinn statute [unused316] adjustment verdict coliseum 1891 brentford",
+    "retrieved_indices": "[4, 3, 5, 19]",
+    "supporting_doc_indices": "[4, 5]"
+  },
+  {
+    "example_id": 3,
+    "question": "What is RAG?",
+    "reference_answer": "Retrieval-Augmented Generation",
+    "generated_text": "question : what is rag? answer : savoymaster pagan enrique gonzales putin trades peter savoymaster mysteries bandits furnishings sublime angelina potentialgrass racedologists elongated finestmah modify freud",
+    "retrieved_indices": "[12, 15, 6, 3]",
+    "supporting_doc_indices": "[6]"
+  },
+  {
+    "example_id": 4,
+    "question": "What does SIMD stand for?",
+    "reference_answer": "Single Instruction Multiple Data",
+    "generated_text": "question : what does simd stand for? answer : savoytightpressive whatsoevertight oct potential 5000 basketball ŋ 1757 furnishings motionsniesuled oct darts maiden [unused400] playground [unused869] melodic licenses floods",
+    "retrieved_indices": "[15, 6, 16, 12]",
+    "supporting_doc_indices": "[12]"
+  }
+]
