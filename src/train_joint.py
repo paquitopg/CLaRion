@@ -5,7 +5,10 @@ from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
@@ -40,6 +43,8 @@ from .models.topk import (
     load_topk_state_dict,
 )
 
+sns.set_theme(style="whitegrid", font="sans-serif")
+
 
 class PerfTracker:
     def __init__(self, backend: str):
@@ -52,7 +57,6 @@ class PerfTracker:
         yield
         dt = time.perf_counter() - t0
         self.times[name].append(dt)
-        print(f"[{self.backend}] {name}: {dt:.6f}s", flush=True)
 
     def add(self, name: str, value: float):
         self.times[name].append(value)
@@ -69,6 +73,22 @@ class PerfTracker:
                 flush=True,
             )
         print(f"[{self.backend}] ========================\n", flush=True)
+
+    def to_rows(self) -> list[dict]:
+        rows: list[dict] = []
+        for name, values in sorted(self.times.items()):
+            rows.append(
+                {
+                    "backend": self.backend,
+                    "stage": name,
+                    "count": len(values),
+                    "total_s": float(np.sum(values)),
+                    "mean_s": float(np.mean(values)),
+                    "min_s": float(np.min(values)),
+                    "max_s": float(np.max(values)),
+                }
+            )
+        return rows
 
 
 def build_tokenizer(name: str):
@@ -341,6 +361,91 @@ def load_full_checkpoint(
     return meta
 
 
+def _save_fig(fig, path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_comparison_report(all_results: list[dict], output_dir: str = "./logs/clarion_experiment_compare"):
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    train_steps_df = pd.DataFrame([r for result in all_results for r in result["train_step_rows"]])
+    epochs_df = pd.DataFrame([r for result in all_results for r in result["epoch_rows"]])
+    perf_df = pd.DataFrame([r for result in all_results for r in result["perf_rows"]])
+    summary_df = pd.DataFrame([result["summary_row"] for result in all_results])
+
+    train_steps_df.to_csv(out / "train_steps_compare.csv", index=False)
+    epochs_df.to_csv(out / "epochs_compare.csv", index=False)
+    perf_df.to_csv(out / "perf_compare.csv", index=False)
+    summary_df.to_csv(out / "summary_compare.csv", index=False)
+
+    if not train_steps_df.empty:
+        fig, axes = plt.subplots(1, 2, figsize=(14, 4.8))
+
+        loss_df = (
+            train_steps_df.groupby("global_step", as_index=False)["train_loss"]
+            .mean()
+            .sort_values("global_step")
+        )
+
+        sns.lineplot(
+            data=loss_df,
+            x="global_step",
+            y="train_loss",
+            color="mediumpurple",
+            ax=axes[0],
+        )
+        axes[0].set_title("Loss")
+        axes[0].set_xlabel("Global step")
+        axes[0].set_ylabel("Loss")
+        axes[0].grid(True, alpha=0.3)
+
+        plot_steps = train_steps_df.copy().sort_values(["backend", "global_step"])
+        plot_steps["sample_time_ms"] = plot_steps["sample_time_s"] * 1000.0
+        plot_steps["sample_time_ms_smooth"] = (
+            plot_steps.groupby("backend")["sample_time_ms"]
+            .transform(lambda s: s.rolling(window=5, min_periods=1).mean())
+        )
+
+        sns.lineplot(
+            data=plot_steps,
+            x="global_step",
+            y="sample_time_ms_smooth",
+            hue="backend",
+            ax=axes[1],
+        )
+        axes[1].set_title("Train sample time comparison")
+        axes[1].set_xlabel("Global step")
+        axes[1].set_ylabel("Sample time (ms)")
+        axes[1].grid(True, alpha=0.3)
+
+        fig.suptitle("Clara experiment comparison", fontsize=18)
+        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        _save_fig(fig, out / "experiment_compare.png")
+
+    if not perf_df.empty:
+        perf_plot = perf_df.sort_values(["mean_s", "backend"], ascending=[False, True])
+
+        fig, ax = plt.subplots(figsize=(11, 5))
+        sns.barplot(
+            data=perf_plot,
+            y="stage",
+            x="mean_s",
+            hue="backend",
+            orient="h",
+            ax=ax,
+        )
+        ax.set_title("Mean stage time by backend")
+        ax.set_xlabel("Mean time (s)")
+        ax.set_ylabel("Stage")
+        ax.grid(True, axis="x", alpha=0.3)
+
+        fig.tight_layout()
+        _save_fig(fig, out / "stage_time_compare.png")
+
+
 def run_experiment(
     backend: str,
     epochs: int = 2,
@@ -352,6 +457,8 @@ def run_experiment(
     print(f"[{backend}] === run_experiment:start ===", flush=True)
 
     loss_backend = backend
+    train_step_rows: list[dict] = []
+    epoch_rows: list[dict] = []
 
     with perf.track("tokenizer.build"):
         tokenizer = build_tokenizer("bert-base-uncased")
@@ -478,6 +585,7 @@ def run_experiment(
     last_ckpt_path = ckpt_dir / f"clarion_full_last_{backend}.npz"
 
     total_train_loss = 0.0
+    global_step = 0
 
     print(f"[{backend}] train:start epochs={epochs}", flush=True)
     for epoch in range(epochs):
@@ -519,16 +627,32 @@ def run_experiment(
             total_train_loss += float(loss)
             perf.add("train.sample.total", sample_dt)
 
+            query_grad_norm = float(np.linalg.norm(grad_query))
+
+            train_step_rows.append(
+                {
+                    "backend": backend,
+                    "epoch": epoch,
+                    "step": step,
+                    "global_step": global_step,
+                    "train_loss": float(loss),
+                    "query_grad_norm": query_grad_norm,
+                    "sample_time_s": float(sample_dt),
+                }
+            )
+            global_step += 1
+
             print(
                 f"[{backend}] epoch={epoch} step={step} "
                 f"loss={float(loss):.6f} "
-                f"query_grad_norm={float(np.linalg.norm(grad_query)):.6f} "
+                f"query_grad_norm={query_grad_norm:.6f} "
                 f"topk_shape={tuple(indices.shape)} "
                 f"sample_time={sample_dt:.6f}s",
                 flush=True,
             )
 
-        perf.add("train.epoch.total", time.perf_counter() - epoch_t0)
+        epoch_dt = time.perf_counter() - epoch_t0
+        perf.add("train.epoch.total", epoch_dt)
 
         with perf.track("dev.evaluate.total"):
             metrics = evaluate(
@@ -539,6 +663,17 @@ def run_experiment(
                 ignore_index=ignore_index,
                 perf=perf,
             )
+
+        epoch_rows.append(
+            {
+                "backend": backend,
+                "epoch": epoch,
+                "dev_loss": float(metrics["loss"]),
+                "dev_token_acc": float(metrics["token_acc"]),
+                "dev_exact_match": float(metrics["exact_match"]),
+                "train_epoch_time_s": float(epoch_dt),
+            }
+        )
 
         print(
             f"[{backend}] epoch={epoch}:done "
@@ -586,20 +721,40 @@ def run_experiment(
     perf.summary()
     print(f"[{backend}] === run_experiment:end ===", flush=True)
 
+    return {
+        "train_step_rows": train_step_rows,
+        "epoch_rows": epoch_rows,
+        "perf_rows": perf.to_rows(),
+        "summary_row": {
+            "backend": backend,
+            "epochs": epochs,
+            "total_train_loss": float(total_train_loss),
+            "test_loss": float(test_metrics["loss"]),
+            "test_token_acc": float(test_metrics["token_acc"]),
+            "test_exact_match": float(test_metrics["exact_match"]),
+            "checkpoint_path": str(last_ckpt_path),
+        },
+    }
+
 
 def main():
+    results = []
+
     for backend in ["cython", "numpy"]:
         print("\n==============================")
         print(f"RUNNING BACKEND = {backend}")
         print("==============================\n")
 
-        run_experiment(
+        result = run_experiment(
             backend=backend,
             epochs=2,
             lr_decoder=1e-3,
             lr_query=1e-3,
             pretrained_encoder_path=f"./artifacts/encoder/encoder_pretrained_{backend}.npz",
         )
+        results.append(result)
+
+    save_comparison_report(results)
 
 
 if __name__ == "__main__":

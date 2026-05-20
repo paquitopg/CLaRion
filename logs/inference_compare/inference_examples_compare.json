@@ -1,0 +1,238 @@
+[
+  {
+    "backend": "cython",
+    "example_id": 0,
+    "question": "How many yards did the nephew of Ivory Lee Brown get during his 2004 true freshman season?",
+    "reference_answer": "1,925 yards",
+    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer : filthy stepfather [unused318] redwood lebanon... realisedvah matchpers traction josiah automatic romney notation money coliseum electorressed programmers ม tina bridge utter",
+    "retrieved_indices": [
+      7,
+      14,
+      5,
+      15
+    ],
+    "supporting_doc_indices": [
+      0,
+      1
+    ],
+    "forward_time_s": 0.0882568049710244,
+    "generate_time_s": 0.39899301202967763,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.046511627906976744,
+    "retrieval_hit_at_k": 0.0,
+    "retrieval_overlap_ratio": 0.0
+  },
+  {
+    "backend": "cython",
+    "example_id": 1,
+    "question": "Which city is the living place of the director of the romantic comedy Big Stone Gap?",
+    "reference_answer": "New York City",
+    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : filthy depicting claudia claudia themselves coliseum 八 assembled inclusive savoymasterjun 9th undertook... [unused956] pin styles angelina... [unused956] furnishings tesla putin",
+    "retrieved_indices": [
+      14,
+      5,
+      7,
+      17
+    ],
+    "supporting_doc_indices": [
+      2,
+      3
+    ],
+    "forward_time_s": 0.005809769965708256,
+    "generate_time_s": 0.4891979719977826,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.046511627906976744,
+    "retrieval_hit_at_k": 0.0,
+    "retrieval_overlap_ratio": 0.0
+  },
+  {
+    "backend": "cython",
+    "example_id": 2,
+    "question": "Which city hosted the first modern Olympic Games?",
+    "reference_answer": "Athens",
+    "generated_text": "question : which city hosted the first modern olympic games? answer : burkina rotherhamlib curtiss ᆸ units confirmation seine doorstep campaigns fitz claudia claudia claudia coliseum... thames judas engagement furnishings [unused862] stepfather mantle synthetic",
+    "retrieved_indices": [
+      19,
+      3,
+      4,
+      5
+    ],
+    "supporting_doc_indices": [
+      4,
+      5
+    ],
+    "forward_time_s": 0.005585102015174925,
+    "generate_time_s": 0.40036934905219823,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  },
+  {
+    "backend": "cython",
+    "example_id": 3,
+    "question": "What is RAG?",
+    "reference_answer": "Retrieval-Augmented Generation",
+    "generated_text": "question : what is rag? answer : animemaster meanwhile [unused956]ɕ drains holdings [unused722] basketball finest joshi furnishingsmah modify molten motions brigades kelsey utter scripture sakura warily relevant townsend",
+    "retrieved_indices": [
+      12,
+      15,
+      6,
+      3
+    ],
+    "supporting_doc_indices": [
+      6
+    ],
+    "forward_time_s": 0.0047987368889153,
+    "generate_time_s": 0.40255447500385344,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  },
+  {
+    "backend": "cython",
+    "example_id": 4,
+    "question": "What does SIMD stand for?",
+    "reference_answer": "Single Instruction Multiple Data",
+    "generated_text": "question : what does simd stand for? answer : mysteries circle whitley introduce 1757 angelina molten motions josiahlich considering abdul enthusiastically wander 11 psalms judas rochelleɕ darling aberdeeninus trades bandits",
+    "retrieved_indices": [
+      6,
+      15,
+      16,
+      12
+    ],
+    "supporting_doc_indices": [
+      12
+    ],
+    "forward_time_s": 0.08793935389257967,
+    "generate_time_s": 0.4073285909835249,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  },
+  {
+    "backend": "numpy",
+    "example_id": 0,
+    "question": "How many yards did the nephew of Ivory Lee Brown get during his 2004 true freshman season?",
+    "reference_answer": "1,925 yards",
+    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer :dilly jayslham matchtub maiden 1840s...masterjun potential seeks introduce showcasing 49ers las 1816olin... lord domingo pronouns quo wedge",
+    "retrieved_indices": [
+      7,
+      14,
+      5,
+      15
+    ],
+    "supporting_doc_indices": [
+      0,
+      1
+    ],
+    "forward_time_s": 0.04532862501218915,
+    "generate_time_s": 3.9721886510960758,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.05128205128205129,
+    "retrieval_hit_at_k": 0.0,
+    "retrieval_overlap_ratio": 0.0
+  },
+  {
+    "backend": "numpy",
+    "example_id": 1,
+    "question": "Which city is the living place of the director of the romantic comedy Big Stone Gap?",
+    "reference_answer": "New York City",
+    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : banners christtz...master crank... creativity documentaries flushing themselves coliseum elector erected filthy themselves... [unused956] scripture pin themselves fiddle luggage seymour",
+    "retrieved_indices": [
+      14,
+      5,
+      7,
+      17
+    ],
+    "supporting_doc_indices": [
+      2,
+      3
+    ],
+    "forward_time_s": 0.2084894279250875,
+    "generate_time_s": 4.107418538071215,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.047619047619047616,
+    "retrieval_hit_at_k": 0.0,
+    "retrieval_overlap_ratio": 0.0
+  },
+  {
+    "backend": "numpy",
+    "example_id": 2,
+    "question": "Which city hosted the first modern Olympic Games?",
+    "reference_answer": "Athens",
+    "generated_text": "question : which city hosted the first modern olympic games? answer : sublime doin drains reviewing covert nearly illustration [unused62]cki seeks hove ostensibly elder claudia coliseum 八olin furnishings sublime doin objected defects representatives hammering",
+    "retrieved_indices": [
+      4,
+      3,
+      5,
+      19
+    ],
+    "supporting_doc_indices": [
+      4,
+      5
+    ],
+    "forward_time_s": 0.2010799200506881,
+    "generate_time_s": 4.276000325102359,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  },
+  {
+    "backend": "numpy",
+    "example_id": 3,
+    "question": "What is RAG?",
+    "reference_answer": "Retrieval-Augmented Generation",
+    "generated_text": "question : what is rag? answer : savoy traction defectsnies exposition capablegman courageous enthusiastically wander molten units scripture prick furnishingsmahmah intervened introduce showcasing enthusiastically wander destroys enthusiastically",
+    "retrieved_indices": [
+      12,
+      15,
+      6,
+      3
+    ],
+    "supporting_doc_indices": [
+      6
+    ],
+    "forward_time_s": 0.19935220200568438,
+    "generate_time_s": 4.286203195923008,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  },
+  {
+    "backend": "numpy",
+    "example_id": 4,
+    "question": "What does SIMD stand for?",
+    "reference_answer": "Single Instruction Multiple Data",
+    "generated_text": "question : what does simd stand for? answer : animeje pistols seymourfia color bombers las 5000ignment hostages motorway working evaluatedpathy disregard providence mccythe counties f founders elector ћ",
+    "retrieved_indices": [
+      15,
+      6,
+      16,
+      12
+    ],
+    "supporting_doc_indices": [
+      12
+    ],
+    "forward_time_s": 0.20010152098257095,
+    "generate_time_s": 4.294745889026672,
+    "generated_num_tokens": 88,
+    "exact_match_text": 0.0,
+    "token_f1_simple": 0.0,
+    "retrieval_hit_at_k": 1.0,
+    "retrieval_overlap_ratio": 1.0
+  }
+]

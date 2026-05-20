@@ -1,0 +1,3 @@
+backend,epochs,n_samples,final_epoch_mean_loss,best_epoch_mean_loss,mean_step_loss,mean_grad_norm,max_grad_norm,total_runtime_s,save_path
+cython,2,23,0.4419528543949127,0.4258002327836078,0.43387654358926026,0.927303953015286,1.1437783241271973,2.8615300389938056,./artifacts/encoder/encoder_pretrained_cython.npz
+numpy,2,23,0.4419528647609379,0.42580022500908893,0.4338765448850134,0.9273039517195328,1.1437782049179077,3.265353351016529,./artifacts/encoder/encoder_pretrained_numpy.npz

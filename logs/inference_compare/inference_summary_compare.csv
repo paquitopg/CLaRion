@@ -1,0 +1,3 @@
+backend,n_examples,forward_time_mean_s,generate_time_mean_s,generated_num_tokens_mean,exact_match_text_mean,token_f1_simple_mean,retrieval_hit_at_k_mean,retrieval_overlap_ratio_mean
+cython,5,0.03847795354668051,0.41968867981340735,88.0,0.0,0.018604651162790697,0.6,0.6
+numpy,5,0.17087033919524403,4.187311319843866,88.0,0.0,0.019780219780219783,0.6,0.6
