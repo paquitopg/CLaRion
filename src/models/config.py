@@ -77,10 +77,40 @@ class BenchConfig:
     measure_iters: int = 10
 
 @dataclass(frozen=True)
+class TopKConfig:
+    """
+    Configuration for Top-K selection module.
+
+    This module implements greedy Top-K selection used for sampling
+    or structured sparsification of logits.
+    """
+
+    k: int = 8
+    temperature: float = 1.0
+    seed: int = 0
+
+@dataclass(frozen=True)
+class LossConfig:
+    """
+    Configuration for language modeling loss computation.
+
+    Designed to be backend-agnostic (Python / NumPy / Cython).
+    """
+
+    ignore_index: int = 0
+    eps: float = 1e-12
+    use_cython: bool = True
+    num_threads: int = 0
+
+
+@dataclass(frozen=True)
 class DecoderConfig:
     """
-    Configuration STRICTEMENT decoder.
-    Ne dépend pas du encoder ModelConfig.
+    Decoder configuration for a lightweight Transformer decoder.
+
+    This configuration is fully independent from the encoder config.
+    It defines all architectural and numerical hyperparameters required
+    for NumPy and Cython backends.
     """
 
     hidden_dim: int = 128
@@ -94,6 +124,46 @@ class DecoderConfig:
     eps: float = 1e-5
     init_scale: float = 0.02
 
+    max_position_embeddings: int = 512
+    default_temperature: float = 1.0
+    default_topk: int = 0
+    default_max_new_tokens: int = 50
+
+    use_causal_mask: bool = True
+    use_rms_norm: bool = True
+
+    num_threads: int = 0
+
     @property
     def head_dim(self) -> int:
+        """Dimension of a single attention head."""
+        assert self.hidden_dim % self.n_heads == 0, \
+            "hidden_dim must be divisible by n_heads"
         return self.hidden_dim // self.n_heads
+
+    @property
+    def scale_qk(self) -> float:
+        """Attention scaling factor (optional explicit precompute)."""
+        return self.head_dim ** -0.5
+
+    @property
+    def embedding_dim(self) -> int:
+        """Embedding matrix dimension."""
+        return self.hidden_dim
+
+    @property
+    def is_valid(self) -> bool:
+        """Basic sanity check for configuration consistency."""
+        return (
+            self.hidden_dim > 0
+            and self.n_heads > 0
+            and self.ffn_dim > 0
+            and self.vocab_size > 0
+        )
+
+@dataclass
+class SystemConfig:
+    encoder: ModelConfig
+    decoder: DecoderConfig
+    topk: TopKConfig
+    backend: str = "numpy"

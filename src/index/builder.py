@@ -13,15 +13,12 @@ from transformers import AutoTokenizer
 
 from ..models.config import IndexConfig, ModelConfig
 from ..models.encoder import EncoderParams, build_encoder
-from .scorer import l2_normalize
+from .scorer import flatten_memory_bank, l2_normalize
 from .store import IndexStore
 
 logger = logging.getLogger("clarion.index.builder")
 
 
-# =========================================================
-# TOKENIZER (SHARED GLOBAL CONTRACT)
-# =========================================================
 def build_tokenizer(name: str):
     tok = AutoTokenizer.from_pretrained(name, use_fast=True)
     tok.pad_token = tok.pad_token or tok.eos_token
@@ -39,29 +36,13 @@ def tokenize_corpus(docs, tokenizer, max_len: int):
     return enc["input_ids"].astype(np.int32)
 
 
-# =========================================================
-# HELPERS
-# =========================================================
-def flatten_memory_bank(bank: np.ndarray) -> np.ndarray:
-    assert bank.ndim == 3
-    pooled = bank.mean(axis=1) 
-
-    return np.ascontiguousarray(
-        l2_normalize(pooled),
-        dtype=np.float32
-    )
-
 def _iter_batches(x: np.ndarray, batch_size: int):
     for i in range(0, x.shape[0], batch_size):
         yield i, min(i + batch_size, x.shape[0]), x[i:i + batch_size]
 
 
-# =========================================================
-# ENCODING (SINGLE PROCESS)
-# =========================================================
 def encode_corpus_serial(token_ids, encoder, batch_size: int):
     cfg = encoder.config
-
     out = np.empty(
         (token_ids.shape[0], cfg.n_memory_tokens, cfg.hidden_dim),
         dtype=np.float32,
@@ -73,47 +54,60 @@ def encode_corpus_serial(token_ids, encoder, batch_size: int):
     return np.ascontiguousarray(out, dtype=np.float32)
 
 
-# =========================================================
-# MULTIPROCESS
-# =========================================================
 _GLOBAL_ENCODER = None
 
 
 def _init_worker(config, params, backend, threads):
     global _GLOBAL_ENCODER
+    print(f"[worker:init] backend={backend} threads={threads}", flush=True)
     _GLOBAL_ENCODER = build_encoder(
         config,
         backend=backend,
         num_threads=threads,
         params=params,
     )
+    print("[worker:init] encoder ready", flush=True)
 
 
 def _encode_worker(batch):
-    return _GLOBAL_ENCODER.forward(batch)
+    print(f"[worker:encode] batch_shape={batch.shape}", flush=True)
+    out = _GLOBAL_ENCODER.forward(batch)
+    print(f"[worker:encode] out_shape={out.shape}", flush=True)
+    return out
 
 
 def encode_corpus_parallel(token_ids, config, params, backend, batch_size):
-    n_workers = max(1, cpu_count() - 1)
+    n_workers = min(4, max(1, cpu_count() - 1))
 
     chunks = [
-        token_ids[i:i + batch_size]
+        np.ascontiguousarray(token_ids[i:i + batch_size], dtype=np.int32)
         for i in range(0, len(token_ids), batch_size)
     ]
+
+    print(
+        f"[encode_corpus_parallel] backend={backend} "
+        f"n_workers={n_workers} n_chunks={len(chunks)}",
+        flush=True,
+    )
 
     with Pool(
         processes=n_workers,
         initializer=_init_worker,
         initargs=(config, params, backend, 1),
+        maxtasksperchild=1,
     ) as pool:
-        results = pool.map(_encode_worker, chunks)
+        results = []
+        for idx, out in enumerate(pool.imap(_encode_worker, chunks), start=1):
+            print(
+                f"[encode_corpus_parallel] chunk={idx}/{len(chunks)} done "
+                f"shape={out.shape}",
+                flush=True,
+            )
+            results.append(out)
 
-    return np.concatenate(results, axis=0)
+    return np.ascontiguousarray(np.concatenate(results, axis=0), dtype=np.float32)
 
 
-# =========================================================
-# REPORT
-# =========================================================
 @dataclass
 class BuildReport:
     n_docs: int
@@ -125,9 +119,6 @@ class BuildReport:
     docs_per_s: float
 
 
-# =========================================================
-# INDEX BUILDER
-# =========================================================
 class IndexBuilder:
     def __init__(
         self,
@@ -139,7 +130,6 @@ class IndexBuilder:
         self.model_config = model_config
         self.index_config = index_config
         self.params = params
-
         self.tokenizer = build_tokenizer(tokenizer_name)
 
     def build(
@@ -149,32 +139,32 @@ class IndexBuilder:
         parallel: bool = False,
         save: bool = True,
     ):
-
         cfg = self.model_config
 
-        # ---------------------------
-        # TOKENIZATION
-        # ---------------------------
+        print(f"[IndexBuilder.build] tokenize:start n_docs={len(docs)}", flush=True)
         token_ids = tokenize_corpus(
             docs,
             self.tokenizer,
             cfg.max_seq_len,
         )
+        print(f"[IndexBuilder.build] tokenize:done shape={token_ids.shape}", flush=True)
 
-        # ---------------------------
-        # ENCODING
-        # ---------------------------
         t0 = time.perf_counter()
 
+        print(f"[IndexBuilder.build] build_encoder:start backend={backend}", flush=True)
         encoder = build_encoder(
             cfg,
             backend=backend,
             params=self.params,
         )
+        print(f"[IndexBuilder.build] build_encoder:done type={type(encoder).__name__}", flush=True)
 
         self.params = encoder.params
 
-        if parallel:
+        use_parallel = bool(parallel and backend == "cython")
+        print(f"[IndexBuilder.build] encode:start parallel={use_parallel}", flush=True)
+
+        if use_parallel:
             bank = encode_corpus_parallel(
                 token_ids,
                 cfg,
@@ -189,29 +179,23 @@ class IndexBuilder:
                 self.index_config.batch_size,
             )
 
+        print(f"[IndexBuilder.build] encode:done bank_shape={bank.shape}", flush=True)
+
         wall = time.perf_counter() - t0
 
-        # ---------------------------
-        # RETRIEVAL BANK
-        # ---------------------------
         retrieval_bank = flatten_memory_bank(bank)
+        retrieval_bank = np.ascontiguousarray(l2_normalize(retrieval_bank), dtype=np.float32)
 
-        # ---------------------------
-        # REPORT
-        # ---------------------------
         report = BuildReport(
             n_docs=len(docs),
             n_memory_tokens=cfg.n_memory_tokens,
             hidden_dim=cfg.hidden_dim,
-            embedding_dim=cfg.embedding_dim,
+            embedding_dim=retrieval_bank.shape[1],
             backend=backend,
             wall_time_s=wall,
             docs_per_s=len(docs) / wall if wall > 0 else float("inf"),
         )
 
-        # ---------------------------
-        # SAVE
-        # ---------------------------
         if save:
             store = IndexStore(
                 self.index_config.index_path,
@@ -219,9 +203,17 @@ class IndexBuilder:
             )
 
             store.save(
-                bank,
+                retrieval_bank,
                 cfg,
-                extra={"build_report": report.__dict__},
+                extra={
+                    "build_report": report.__dict__,
+                    "memory_bank_shape": list(bank.shape),
+                },
+            )
+
+            np.save(
+                Path(self.index_config.index_path).with_name("memory_bank.npy"),
+                bank,
             )
 
             np.save(
@@ -234,7 +226,7 @@ class IndexBuilder:
                 token_ids,
             )
 
-            with Path(self.index_config.index_path).with_name("raw_docs.jsonl").open("w") as f:
+            with Path(self.index_config.index_path).with_name("raw_docs.jsonl").open("w", encoding="utf-8") as f:
                 for d in docs:
                     f.write(json.dumps({"text": d}) + "\n")
 

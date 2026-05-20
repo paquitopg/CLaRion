@@ -1,101 +1,118 @@
 from __future__ import annotations
 
+from typing import Any, Tuple
 import numpy as np
-import torch
-import torch.nn.functional as F
-
-from .topk import ClaraTopKCython
-
-
-def search_differentiable(
-    retrieval_bank: np.ndarray,
-    structured_bank: np.ndarray,
-    query_embeddings: torch.Tensor,
-    topk: ClaraTopKCython,
-):
-    """
-    Compute top-k retrieval over a cosine similarity space and gather
-    corresponding memory representations.
-
-    Args:
-        retrieval_bank: (B, H) normalized document embeddings.
-        structured_bank: (B, T, H) full memory-token representations.
-        query_embeddings: (B, H) query embeddings.
-        topk: differentiable top-k operator.
-
-    Returns:
-        selected: (B, k, H) retrieved memory representations.
-        indices: (B, k) selected document indices.
-    """
-
-    device = query_embeddings.device
-
-    retrieval_bank_t = torch.from_numpy(retrieval_bank).to(device)
-    q = F.normalize(query_embeddings, dim=-1)
-
-    scores = q @ retrieval_bank_t.T
-    Z, indices = topk(scores)
-
-    memory = structured_bank.mean(axis=1)
-    memory = torch.from_numpy(memory).to(device)
-
-    selected = Z @ memory
-
-    return selected, indices
 
 
 class ClaraPipeline:
     """
-    Retrieval-augmented generation pipeline.
+    End-to-end retrieval + generation pipeline.
 
-    Combines:
-        - encoder producing query embeddings
-        - cosine retrieval over a memory bank
-        - differentiable top-k selection
-        - decoder conditioned on retrieved memory
+    Fully backend-driven:
+    - encoder: produces query embeddings (NumPy)
+    - decoder: consumes retrieved memory
+    - topk: shared selection backend (NumPy/Cython/Python)
     """
 
-    def __init__(self, encoder, decoder, topk):
+    def __init__(self, encoder: Any, decoder: Any, topk: Any):
         self.encoder = encoder
         self.decoder = decoder
         self.topk = topk
 
-    def forward(self, input_ids: torch.Tensor, bank: np.ndarray):
+    def _normalize_bank(self, bank: np.ndarray) -> np.ndarray:
         """
-        Forward pass through retrieval-augmented decoder.
+        Normalize retrieval bank to unit vectors.
 
         Args:
-            input_ids: (B, L) token ids.
-            bank: (N, T, H) encoded document memory bank.
+            bank: (N, T, H)
 
         Returns:
-            logits: (B, L, V)
-            indices: (B, k) retrieved document indices
+            (N, H) normalized embeddings
+        """
+        x = bank.mean(axis=1).astype(np.float32)
+        x /= np.linalg.norm(x, axis=-1, keepdims=True) + 1e-12
+        return x
+
+    def _retrieve(
+        self,
+        query: np.ndarray,
+        retrieval_bank: np.ndarray,
+        structured_bank: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Retrieve top-k memory blocks.
+
+        Args:
+            query: (B, H)
+            retrieval_bank: (N, H)
+            structured_bank: (N, T, H)
+
+        Returns:
+            memory: (B, k*T, H)
+            indices: (B, k)
         """
 
-        retrieval_bank = bank.mean(axis=1)
-        retrieval_bank = retrieval_bank.astype(np.float32, copy=False)
-        retrieval_bank = np.ascontiguousarray(retrieval_bank)
+        scores = query @ retrieval_bank.T  # (B, N)
 
-        norm = np.linalg.norm(retrieval_bank, axis=-1, keepdims=True) + 1e-12
-        retrieval_bank = retrieval_bank / norm
+        _, indices = self.topk.forward(scores)
 
-        query_mem = self.encoder.encode_retrieval(
-            input_ids.cpu().numpy()
-        )
+        B, k = indices.shape
+        _, T, H = structured_bank.shape
 
-        query_mem = torch.from_numpy(query_mem).to(input_ids.device)
+        memory = structured_bank[indices]          # (B, k, T, H)
+        memory = memory.reshape(B, k * T, H)       # flatten for decoder
 
-        memory, idx = search_differentiable(
+        return memory, indices
+
+    def forward(
+        self,
+        input_ids: np.ndarray,
+        bank: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Forward pass.
+
+        Args:
+            input_ids: (B, T)
+            bank: (N, T, H)
+
+        Returns:
+            logits: decoder output
+            indices: retrieved doc ids
+        """
+
+        retrieval_bank = self._normalize_bank(bank)
+
+        query = self.encoder.encode_retrieval(input_ids)
+
+        memory, indices = self._retrieve(
+            query=query,
             retrieval_bank=retrieval_bank,
             structured_bank=bank,
-            query_embeddings=query_mem,
-            topk=self.topk,
         )
 
-        logits = self.decoder(
-            input_ids=input_ids,
-            memory=memory,
+        logits = self.decoder.forward(input_ids, memory)
+
+        return logits, indices
+
+    def generate(
+        self,
+        input_ids: np.ndarray,
+        bank: np.ndarray,
+        **gen_kwargs,
+    ) -> np.ndarray:
+        """
+        Autoregressive generation with retrieval memory.
+        """
+
+        retrieval_bank = self._normalize_bank(bank)
+
+        query = self.encoder.encode_retrieval(input_ids)
+
+        memory, _ = self._retrieve(
+            query=query,
+            retrieval_bank=retrieval_bank,
+            structured_bank=bank,
         )
 
-        return logits, idx
+        return self.decoder.generate(input_ids, memory, **gen_kwargs)

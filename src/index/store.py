@@ -1,15 +1,3 @@
-"""
-On-disk store for the document embedding bank.
-
-Layout
-------
-- index_path : flat (N, D) float32 array (.npy)
-- meta_path  : JSON metadata (shape, dtype, config hash)
-
-This is intentionally NOT an ANN index (no HNSW / IVF / quantization).
-The goal is CPU-parallel encoding + retrieval benchmarking, not large-scale search.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -28,12 +16,6 @@ logger = logging.getLogger("clarion.index.store")
 
 
 class IndexStore:
-    """
-    Minimal persistent storage for embedding banks.
-
-    Keeps everything simple: numpy .npy + JSON metadata.
-    """
-
     __slots__ = ("index_path", "meta_path", "_bank", "_meta")
 
     def __init__(self, index_path: str | os.PathLike, meta_path: str | os.PathLike):
@@ -42,21 +24,16 @@ class IndexStore:
         self._bank: Optional[np.ndarray] = None
         self._meta: Optional[dict] = None
 
-    # --------------------------- write ---------------------------- #
     def save(
         self,
         bank: np.ndarray,
         config: ModelConfig,
         extra: Optional[dict] = None,
     ) -> None:
-        """
-        Save embedding bank + metadata.
-        """
+        bank = np.asarray(bank, dtype=np.float32, order="C")
 
-        bank = np.asarray(bank, dtype=np.float32)
-
-        if bank.ndim != 2:
-            raise ValueError(f"bank must be 2D (N, D), got shape {bank.shape}")
+        if bank.ndim not in (2, 3):
+            raise ValueError(f"bank must be 2D or 3D, got shape {bank.shape}")
 
         self.index_path.parent.mkdir(parents=True, exist_ok=True)
         self.meta_path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,12 +41,19 @@ class IndexStore:
         np.save(self.index_path, bank, allow_pickle=False)
 
         meta = {
+            "shape": list(bank.shape),
             "n_docs": int(bank.shape[0]),
-            "embedding_dim": int(bank.shape[1]),
             "dtype": str(bank.dtype),
             "config": asdict(config),
             "config_hash": _hash_config(config),
         }
+
+        if bank.ndim == 2:
+            meta["embedding_dim"] = int(bank.shape[1])
+        else:
+            meta["n_memory_tokens"] = int(bank.shape[1])
+            meta["hidden_dim"] = int(bank.shape[2])
+            meta["embedding_dim"] = int(bank.shape[1] * bank.shape[2])
 
         if extra:
             meta.update(extra)
@@ -78,18 +62,12 @@ class IndexStore:
             json.dump(meta, f, indent=2)
 
         logger.info(
-            "Saved index: %d docs, dim=%d -> %s",
-            bank.shape[0],
-            bank.shape[1],
+            "Saved index: shape=%s -> %s",
+            bank.shape,
             self.index_path,
         )
 
-    # --------------------------- load ----------------------------- #
     def load(self, mmap: bool = True) -> tuple[np.ndarray, dict]:
-        """
-        Load index from disk.
-        """
-
         if not self.index_path.exists():
             raise FileNotFoundError(self.index_path)
 
@@ -97,8 +75,6 @@ class IndexStore:
             self.index_path,
             mmap_mode="r" if mmap else None,
         )
-
-        # Ensure downstream kernels get contiguous float32
         bank = np.asarray(bank, dtype=np.float32, order="C")
 
         if not self.meta_path.exists():
@@ -109,7 +85,6 @@ class IndexStore:
 
         self._bank = bank
         self._meta = meta
-
         return bank, meta
 
     @property
@@ -126,9 +101,5 @@ class IndexStore:
 
 
 def _hash_config(config: ModelConfig) -> str:
-    """
-    Stable hash of model config to detect index mismatch.
-    """
-
     payload = json.dumps(asdict(config), sort_keys=True).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()[:16]

@@ -18,7 +18,7 @@ import platform
 import subprocess
 
 # OpenMP flags differ between toolchains.
-EXTRA_COMPILE = ["-O3", "-ffast-math", "-march=native"]
+EXTRA_COMPILE = ["-O3", "-march=native",  "-ffast-math"]
 EXTRA_LINK: list[str] = []
 
 
@@ -66,7 +66,7 @@ def make_ext(qualified_name: str, source: str) -> Extension:
         include_dirs=[np.get_include()],
         extra_compile_args=EXTRA_COMPILE,
         extra_link_args=EXTRA_LINK,
-        language="c",
+        language="c++",
     )
 
 
@@ -80,6 +80,8 @@ ext_modules = [
     # Decoder-side differentiable top-k (Avner). Building it from this single
     # setup.py gives `python setup.py build_ext --inplace` one-shot semantics.
     make_ext("src.parallel.cython_topk",    "src/parallel/cython_topk.pyx"),
+    make_ext("src.parallel.cython_loss",    "src/parallel/cython_loss.pyx"),
+    make_ext("src.parallel.cython_decoder",    "src/parallel/cython_decoder.pyx"),
 ]
 
 setup(
@@ -93,6 +95,8 @@ setup(
             "boundscheck": False,
             "wraparound": False,
             "cdivision": True,
+            "nonecheck": False,
+            "initializedcheck": False,
         },
         annotate=False,
     ),

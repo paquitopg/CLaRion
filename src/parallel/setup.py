@@ -13,7 +13,7 @@ ext_modules = [
         "parallel.cython_topk",
         ["src/parallel/cython_topk.pyx"],
         include_dirs=[np.get_include()],
-        extra_compile_args=["-O3", "-march=native", "-fopenmp"],
+        extra_compile_args=["-O3", "-ffast-math", "-march=native", "-fopenmp"],
         extra_link_args=["-fopenmp"],
     ),
 ]

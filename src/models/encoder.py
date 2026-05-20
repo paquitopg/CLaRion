@@ -248,7 +248,6 @@ class EncoderCython(EncoderBackend):
         num_threads: int = 0,
     ):
         super().__init__(config, params)
-
         self.num_threads = num_threads
         self._available = False
 
@@ -261,7 +260,6 @@ class EncoderCython(EncoderBackend):
             self._ext = None
 
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
-
         if not self._available:
             return EncoderNumpy(self.config, self.params).forward(token_ids)
 
@@ -272,33 +270,32 @@ class EncoderCython(EncoderBackend):
         mem = self.params.memory.expand_to_batch(B)
 
         x = np.concatenate([doc_h, mem], axis=1)
-        x = x + self.params.pos_embed[: x.shape[1]][None, :, :]
+        x = x + self.params.pos_embed[:x.shape[1]][None, :, :]
         x = np.ascontiguousarray(x, dtype=np.float32)
+
+        mem = np.ascontiguousarray(mem, dtype=np.float32)
 
         for layer in self.params.layers:
             x = self._ext.encoder_block(
                 x,
-                layer.Wq,
-                layer.Wk,
-                layer.Wv,
-                layer.Wo,
-                layer.W1,
-                layer.W2,
-                layer.norm1,
-                layer.norm2,
-                cfg.n_heads,
-                cfg.head_dim,
+                mem,
+                np.ascontiguousarray(layer.Wq, dtype=np.float32),
+                np.ascontiguousarray(layer.Wk, dtype=np.float32),
+                np.ascontiguousarray(layer.Wv, dtype=np.float32),
+                np.ascontiguousarray(layer.Wo, dtype=np.float32),
+                np.ascontiguousarray(layer.W1, dtype=np.float32),
+                np.ascontiguousarray(layer.W2, dtype=np.float32),
+                np.ascontiguousarray(layer.norm1, dtype=np.float32),
+                np.ascontiguousarray(layer.norm2, dtype=np.float32),
                 cfg.eps,
-                self.num_threads,
             )
 
         x = _rms_norm(x, self.params.norm_final, cfg.eps)
 
         return np.ascontiguousarray(
-            x[:, -cfg.n_memory_tokens :, :],
+            x[:, -cfg.n_memory_tokens:, :],
             dtype=np.float32,
         )
-
 
 def build_encoder(
     config: ModelConfig,
