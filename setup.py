@@ -18,8 +18,8 @@ import platform
 import subprocess
 
 # OpenMP flags differ between toolchains.
-EXTRA_COMPILE = ["-O3", "-march=native",  "-ffast-math"]
-EXTRA_LINK: list[str] = []
+EXTRA_COMPILE = ["-O3", "-march=native", "-ffast-math", "-fopenmp"]
+EXTRA_LINK: list[str] = ["-fopenmp"]
 
 
 def _brew_prefix(formula: str, default: str) -> str:

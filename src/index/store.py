@@ -91,13 +91,13 @@ class IndexStore:
     def bank(self) -> np.ndarray:
         if self._bank is None:
             self.load()
-        return self._bank  # type: ignore[return-value]
+        return self._bank
 
     @property
     def meta(self) -> dict:
         if self._meta is None:
             self.load()
-        return self._meta  # type: ignore[return-value]
+        return self._meta
 
 
 def _hash_config(config: ModelConfig) -> str:

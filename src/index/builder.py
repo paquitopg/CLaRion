@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from multiprocessing import Pool, cpu_count
@@ -18,6 +19,10 @@ from .store import IndexStore
 
 logger = logging.getLogger("clarion.index.builder")
 
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
 
 def build_tokenizer(name: str):
     tok = AutoTokenizer.from_pretrained(name, use_fast=True)
@@ -33,7 +38,7 @@ def tokenize_corpus(docs, tokenizer, max_len: int):
         max_length=max_len,
         return_tensors="np",
     )
-    return enc["input_ids"].astype(np.int32)
+    return enc["input_ids"].astype(np.int32, copy=False)
 
 
 def _iter_batches(x: np.ndarray, batch_size: int):
@@ -59,6 +64,7 @@ _GLOBAL_ENCODER = None
 
 def _init_worker(config, params, backend, threads):
     global _GLOBAL_ENCODER
+    t0 = time.perf_counter()
     print(f"[worker:init] backend={backend} threads={threads}", flush=True)
     _GLOBAL_ENCODER = build_encoder(
         config,
@@ -66,18 +72,22 @@ def _init_worker(config, params, backend, threads):
         num_threads=threads,
         params=params,
     )
-    print("[worker:init] encoder ready", flush=True)
+    dt = time.perf_counter() - t0
+    print(f"[worker:init] encoder ready elapsed={dt:.4f}s", flush=True)
 
 
 def _encode_worker(batch):
+    t0 = time.perf_counter()
     print(f"[worker:encode] batch_shape={batch.shape}", flush=True)
     out = _GLOBAL_ENCODER.forward(batch)
-    print(f"[worker:encode] out_shape={out.shape}", flush=True)
+    dt = time.perf_counter() - t0
+    print(f"[worker:encode] out_shape={out.shape} elapsed={dt:.4f}s", flush=True)
     return out
 
 
 def encode_corpus_parallel(token_ids, config, params, backend, batch_size):
-    n_workers = min(4, max(1, cpu_count() - 1))
+    n_chunks = max(1, (len(token_ids) + batch_size - 1) // batch_size)
+    n_workers = min(n_chunks, 4, max(1, cpu_count() - 1))
 
     chunks = [
         np.ascontiguousarray(token_ids[i:i + batch_size], dtype=np.int32)
@@ -86,15 +96,26 @@ def encode_corpus_parallel(token_ids, config, params, backend, batch_size):
 
     print(
         f"[encode_corpus_parallel] backend={backend} "
-        f"n_workers={n_workers} n_chunks={len(chunks)}",
+        f"n_workers={n_workers} n_chunks={len(chunks)} "
+        f"batch_size={batch_size}",
         flush=True,
     )
 
+    if len(chunks) < 4:
+        print("[encode_corpus_parallel] fallback=serial_small_workload", flush=True)
+        encoder = build_encoder(
+            config,
+            backend=backend,
+            num_threads=1,
+            params=params,
+        )
+        return encode_corpus_serial(token_ids, encoder, batch_size)
+
+    t0 = time.perf_counter()
     with Pool(
         processes=n_workers,
         initializer=_init_worker,
         initargs=(config, params, backend, 1),
-        maxtasksperchild=1,
     ) as pool:
         results = []
         for idx, out in enumerate(pool.imap(_encode_worker, chunks), start=1):
@@ -105,7 +126,10 @@ def encode_corpus_parallel(token_ids, config, params, backend, batch_size):
             )
             results.append(out)
 
-    return np.ascontiguousarray(np.concatenate(results, axis=0), dtype=np.float32)
+    bank = np.ascontiguousarray(np.concatenate(results, axis=0), dtype=np.float32)
+    dt = time.perf_counter() - t0
+    print(f"[encode_corpus_parallel] total_elapsed={dt:.4f}s", flush=True)
+    return bank
 
 
 @dataclass
@@ -142,28 +166,42 @@ class IndexBuilder:
         cfg = self.model_config
 
         print(f"[IndexBuilder.build] tokenize:start n_docs={len(docs)}", flush=True)
+        t_tok0 = time.perf_counter()
         token_ids = tokenize_corpus(
             docs,
             self.tokenizer,
             cfg.max_seq_len,
         )
-        print(f"[IndexBuilder.build] tokenize:done shape={token_ids.shape}", flush=True)
+        t_tok1 = time.perf_counter()
+        print(
+            f"[IndexBuilder.build] tokenize:done shape={token_ids.shape} "
+            f"elapsed={t_tok1 - t_tok0:.4f}s",
+            flush=True,
+        )
 
         t0 = time.perf_counter()
 
         print(f"[IndexBuilder.build] build_encoder:start backend={backend}", flush=True)
+        t_enc0 = time.perf_counter()
         encoder = build_encoder(
             cfg,
             backend=backend,
             params=self.params,
+            num_threads=1 if backend == "cython" else 0,
         )
-        print(f"[IndexBuilder.build] build_encoder:done type={type(encoder).__name__}", flush=True)
+        t_enc1 = time.perf_counter()
+        print(
+            f"[IndexBuilder.build] build_encoder:done type={type(encoder).__name__} "
+            f"elapsed={t_enc1 - t_enc0:.4f}s",
+            flush=True,
+        )
 
         self.params = encoder.params
 
         use_parallel = bool(parallel and backend == "cython")
         print(f"[IndexBuilder.build] encode:start parallel={use_parallel}", flush=True)
 
+        t_bank0 = time.perf_counter()
         if use_parallel:
             bank = encode_corpus_parallel(
                 token_ids,
@@ -178,13 +216,28 @@ class IndexBuilder:
                 encoder,
                 self.index_config.batch_size,
             )
+        t_bank1 = time.perf_counter()
 
-        print(f"[IndexBuilder.build] encode:done bank_shape={bank.shape}", flush=True)
+        print(
+            f"[IndexBuilder.build] encode:done bank_shape={bank.shape} "
+            f"elapsed={t_bank1 - t_bank0:.4f}s",
+            flush=True,
+        )
 
         wall = time.perf_counter() - t0
 
+        t_ret0 = time.perf_counter()
         retrieval_bank = flatten_memory_bank(bank)
-        retrieval_bank = np.ascontiguousarray(l2_normalize(retrieval_bank), dtype=np.float32)
+        retrieval_bank = np.ascontiguousarray(
+            l2_normalize(retrieval_bank),
+            dtype=np.float32,
+        )
+        t_ret1 = time.perf_counter()
+        print(
+            f"[IndexBuilder.build] retrieval_bank:done shape={retrieval_bank.shape} "
+            f"elapsed={t_ret1 - t_ret0:.4f}s",
+            flush=True,
+        )
 
         report = BuildReport(
             n_docs=len(docs),
@@ -215,12 +268,10 @@ class IndexBuilder:
                 Path(self.index_config.index_path).with_name("memory_bank.npy"),
                 bank,
             )
-
             np.save(
                 Path(self.index_config.index_path).with_name("retrieval_bank.npy"),
                 retrieval_bank,
             )
-
             np.save(
                 Path(self.index_config.index_path).with_name("token_ids.npy"),
                 token_ids,

@@ -52,15 +52,15 @@ class ClaraPipeline:
             indices: (B, k)
         """
 
-        scores = query @ retrieval_bank.T  # (B, N)
+        scores = query @ retrieval_bank.T
 
         _, indices = self.topk.forward(scores)
 
         B, k = indices.shape
         _, T, H = structured_bank.shape
 
-        memory = structured_bank[indices]          # (B, k, T, H)
-        memory = memory.reshape(B, k * T, H)       # flatten for decoder
+        memory = structured_bank[indices]
+        memory = memory.reshape(B, k * T, H)
 
         return memory, indices
 

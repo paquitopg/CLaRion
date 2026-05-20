@@ -239,8 +239,6 @@ class EncoderNumpy(EncoderBackend):
 
 
 class EncoderCython(EncoderBackend):
-    """Cython-accelerated encoder backend."""
-
     def __init__(
         self,
         config: ModelConfig,
@@ -248,8 +246,9 @@ class EncoderCython(EncoderBackend):
         num_threads: int = 0,
     ):
         super().__init__(config, params)
-        self.num_threads = num_threads
+        self.num_threads = num_threads if num_threads and num_threads > 0 else 1
         self._available = False
+        self._params_prepared = False
 
         try:
             from src.parallel import cython_encoder
@@ -259,38 +258,81 @@ class EncoderCython(EncoderBackend):
             logger.warning("Cython unavailable: %s", e)
             self._ext = None
 
+        if self.params is not None:
+            self._prepare_contiguous_params()
+
+    def _prepare_contiguous_params(self) -> None:
+        if self.params is None or self._params_prepared:
+            return
+
+        p = self.params
+
+        p.embed = np.ascontiguousarray(p.embed, dtype=np.float32)
+        p.pos_embed = np.ascontiguousarray(p.pos_embed, dtype=np.float32)
+        p.norm_final = np.ascontiguousarray(p.norm_final, dtype=np.float32)
+
+        for layer in p.layers:
+            layer.Wq = np.ascontiguousarray(layer.Wq, dtype=np.float32)
+            layer.Wk = np.ascontiguousarray(layer.Wk, dtype=np.float32)
+            layer.Wv = np.ascontiguousarray(layer.Wv, dtype=np.float32)
+            layer.Wo = np.ascontiguousarray(layer.Wo, dtype=np.float32)
+            layer.W1 = np.ascontiguousarray(layer.W1, dtype=np.float32)
+            layer.W2 = np.ascontiguousarray(layer.W2, dtype=np.float32)
+            layer.norm1 = np.ascontiguousarray(layer.norm1, dtype=np.float32)
+            layer.norm2 = np.ascontiguousarray(layer.norm2, dtype=np.float32)
+
+        self._params_prepared = True
+
     def forward(self, token_ids: np.ndarray) -> np.ndarray:
         if not self._available:
             return EncoderNumpy(self.config, self.params).forward(token_ids)
 
+        if self.params is None:
+            raise ValueError("Encoder parameters are not initialized")
+
+        if not self._params_prepared:
+            self._prepare_contiguous_params()
+
         cfg = self.config
+        p = self.params
+
+        token_ids = np.ascontiguousarray(token_ids, dtype=np.int32)
         B = token_ids.shape[0]
 
-        doc_h = self.params.embed[token_ids]
-        mem = self.params.memory.expand_to_batch(B)
+        doc_h = p.embed[token_ids]
+        mem = p.memory.expand_to_batch(B).astype(np.float32, copy=False)
 
         x = np.concatenate([doc_h, mem], axis=1)
-        x = x + self.params.pos_embed[:x.shape[1]][None, :, :]
+        x = x + p.pos_embed[:x.shape[1]][None, :, :]
         x = np.ascontiguousarray(x, dtype=np.float32)
 
-        mem = np.ascontiguousarray(mem, dtype=np.float32)
+        doc_mask = token_ids != cfg.pad_id
+        mem_mask = np.ones((B, cfg.n_memory_tokens), dtype=np.uint8)
+        attention_mask = np.ascontiguousarray(
+            np.concatenate([doc_mask.astype(np.uint8, copy=False), mem_mask], axis=1),
+            dtype=np.uint8,
+        )
 
-        for layer in self.params.layers:
-            x = self._ext.encoder_block(
+        for layer in p.layers:
+            x = self._ext.encoder_block_hybrid_blockwise(
                 x,
-                mem,
-                np.ascontiguousarray(layer.Wq, dtype=np.float32),
-                np.ascontiguousarray(layer.Wk, dtype=np.float32),
-                np.ascontiguousarray(layer.Wv, dtype=np.float32),
-                np.ascontiguousarray(layer.Wo, dtype=np.float32),
-                np.ascontiguousarray(layer.W1, dtype=np.float32),
-                np.ascontiguousarray(layer.W2, dtype=np.float32),
-                np.ascontiguousarray(layer.norm1, dtype=np.float32),
-                np.ascontiguousarray(layer.norm2, dtype=np.float32),
+                layer.Wq,
+                layer.Wk,
+                layer.Wv,
+                layer.Wo,
+                layer.W1,
+                layer.W2,
+                layer.norm1,
+                layer.norm2,
+                attention_mask,
+                cfg.n_heads,
+                cfg.head_dim,
                 cfg.eps,
+                self.num_threads,
+                64,
             )
 
-        x = _rms_norm(x, self.params.norm_final, cfg.eps)
+        x = _rms_norm(x, p.norm_final, cfg.eps)
 
         return np.ascontiguousarray(
             x[:, -cfg.n_memory_tokens:, :],

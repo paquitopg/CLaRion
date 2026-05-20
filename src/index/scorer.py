@@ -11,9 +11,9 @@ import numpy as np
 logger = logging.getLogger("clarion.index.scorer")
 
 try:
-    from src.parallel import cython_index as _cy  # type: ignore
+    from src.parallel import cython_index as _cy
     _CY_AVAILABLE = True
-except Exception as e:  # pragma: no cover
+except Exception as e:
     _cy = None
     _CY_AVAILABLE = False
     logger.warning(
@@ -98,43 +98,15 @@ def cosine_numpy(
     return (q @ m.T) / temperature
 
 
-def cosine_cython_omp(
-    queries: np.ndarray,
-    index: np.ndarray,
-    num_threads: int = 0,
-    temperature: float = 1.0,
-) -> np.ndarray:
-    q = flatten_memory_bank(queries)
-    m = flatten_memory_bank(index)
-
-    if not _CY_AVAILABLE:
-        return cosine_numpy(q, m, temperature=temperature)
-
-    q = np.ascontiguousarray(q, dtype=np.float32)
-    m = np.ascontiguousarray(m, dtype=np.float32)
-
-    scores = _cy.cosine_scores_omp(q, m, num_threads)
-    return scores / temperature
-
-
 def top_k_indices(
     scores: np.ndarray,
     k: int,
-    backend: str = "numpy",
-    num_threads: int = 0,
 ) -> tuple[np.ndarray, np.ndarray]:
     q, n = scores.shape
     k = min(k, n)
 
     if k <= 0:
         raise ValueError("k must be >= 1")
-
-    if backend == "cython" and _CY_AVAILABLE:
-        return _cy.top_k_descending(
-            np.ascontiguousarray(scores, dtype=np.float32),
-            k,
-            num_threads,
-        )
 
     part = np.argpartition(-scores, kth=k - 1, axis=-1)[:, :k]
     chosen = np.take_along_axis(scores, part, axis=-1)
@@ -144,6 +116,73 @@ def top_k_indices(
     vals = np.take_along_axis(chosen, order, axis=-1).astype(np.float32, copy=False)
 
     return idx, vals
+
+
+def cosine_cython_omp(
+    queries: np.ndarray,
+    index: np.ndarray,
+    num_threads: int = 0,
+    temperature: float = 1.0,
+) -> np.ndarray:
+    """
+    API conservée pour compatibilité.
+    Mais ce chemin ne devrait plus être utilisé pour la recherche top-k.
+    """
+    q = l2_normalize(flatten_memory_bank(queries))
+    m = l2_normalize(flatten_memory_bank(index))
+
+    if not _CY_AVAILABLE or not hasattr(_cy, "cosine_scores_omp"):
+        return (q @ m.T) / temperature
+
+    scores = _cy.cosine_scores_omp(
+        np.ascontiguousarray(q, dtype=np.float32),
+        np.ascontiguousarray(m, dtype=np.float32),
+        num_threads,
+    )
+
+    if temperature != 1.0:
+        scores = scores / temperature
+
+    return scores
+
+
+def cosine_topk_cython_backend(
+    queries: np.ndarray,
+    index_normed: np.ndarray,
+    k: int,
+    num_threads: int = 0,
+    temperature: float = 1.0,
+) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+    """
+    Backend 'cython' réel = fused top-k.
+    Retourne (idx, vals, full_scores_or_none)
+    """
+    q = l2_normalize(flatten_memory_bank(queries))
+    m = np.ascontiguousarray(index_normed, dtype=np.float32)
+
+    if k <= 0:
+        raise ValueError("k must be >= 1")
+
+    if _CY_AVAILABLE and hasattr(_cy, "cosine_top_k_omp"):
+        idx, vals = _cy.cosine_top_k_omp(
+            np.ascontiguousarray(q, dtype=np.float32),
+            m,
+            k,
+            num_threads,
+        )
+        if temperature != 1.0:
+            vals = vals / temperature
+        return (
+            idx.astype(np.int32, copy=False),
+            vals.astype(np.float32, copy=False),
+            None,
+        )
+
+    scores = q @ m.T
+    if temperature != 1.0:
+        scores = scores / temperature
+    idx, vals = top_k_indices(scores, k)
+    return idx, vals, scores
 
 
 @dataclass
@@ -192,31 +231,34 @@ class Retriever:
         t0 = time.perf_counter()
         queries = flatten_memory_bank(queries)
 
+        scores = None
+
         if backend == "python":
             scores = cosine_python_loop(
                 queries,
                 self.bank_flat,
                 temperature=temperature,
             )
+            idx, vals = top_k_indices(scores, k)
+
         elif backend == "numpy":
             q = l2_normalize(queries)
-            scores = (q @ self._normalized.T) / temperature
+            scores = q @ self._normalized.T
+            if temperature != 1.0:
+                scores = scores / temperature
+            idx, vals = top_k_indices(scores, k)
+
         elif backend == "cython":
-            scores = cosine_cython_omp(
-                queries,
-                self.bank_flat,
+            idx, vals, scores = cosine_topk_cython_backend(
+                queries=queries,
+                index_normed=self._normalized,
+                k=k,
                 num_threads=num_threads,
                 temperature=temperature,
             )
+
         else:
             raise ValueError(f"Unknown backend: {backend!r}")
-
-        idx, vals = top_k_indices(
-            scores,
-            k,
-            backend="cython" if backend == "cython" else "numpy",
-            num_threads=num_threads,
-        )
 
         flat_vectors = self.bank_flat[idx]
         memory_vectors = self.bank_memory[idx]
