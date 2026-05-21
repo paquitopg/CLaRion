@@ -1,153 +1,191 @@
+
 # CLaRiON
 
-**C**ontinuous **L**atent **A**ugmented-**R**etrieval **I**nference **O**n **N**-cores.
+**C**ontinuous **L**atent **A**ugmented-**R**etrieval **I**nference **O**n **N**-cores
 
-A CPU-parallel reimplementation of [CLaRa](https://arxiv.org/abs/2511.18659) at toy scale. The point is to take CLaRa's three compute hotspots — document encoding, cosine retrieval over a corpus, and the differentiable Straight-Through
-top-k — and parallelize each on CPU with Cython + OpenMP, then benchmark
-against a naive baseline.
+CPU-parallel reimplementation of the CLaRa architecture with:
+- encoder pretraining,
+- joint retrieval/generation training,
+- NumPy and Cython backends,
+- OpenMP acceleration,
+- end-to-end benchmarking and profiling tools.
 
-Authors: Avner El Baz Paco Goze.
-
----
-
-## What it does
-
-Pipeline mirrors CLaRa, end-to-end:
-
-1. **Encoder** — a 2-layer transformer compresses each document into a small
-   set of memory-token embeddings (`src/models/encoder.py`);
-2. **Index** — embeddings stored as a frozen `(N, D)` bank
-   (`src/index/store.py`);
-3. **Retriever** — cosine similarity over the bank + top-k selection
-   (`src/index/scorer.py`);
-4. **Differentiable top-k** — Straight-Through estimator that lets the
-   generator's loss propagate back to the retriever (`src/models/topk.py`);
-5. **Decoder** — generator that conditions on the retrieved memory tokens.
-
-Each compute hotspot has three implementations side by side for the
-benchmark report: a pure-Python loop, a numpy/BLAS baseline, and a
-Cython + OpenMP parallel version.
+Authors: **Avner El Baz**, **Paco Goze**
 
 ---
 
-## Quick start
+<p align="center">
+  
+  <img src="logs/inference_compare/inference_compare.png" width="45%">
+  <img src="logs/clarion_experiment_compare/experiment_compare.png" width="45%">
+</p>
 
-Requirements: Python 3.14, `uv`, and (on macOS) `libomp` from Homebrew.
+<p align="center">
+  <img src="logs/encoder_pretrain_compare/perf_stage_compare.png" width="45%">
+  <img src="logs/inference_compare/inference_time_compare.png" width="37%">
+</p>
+
+---
+
+## Overview
+
+CLaRiON reproduces the core CLaRa pipeline:
+
+1. Transformer encoder
+2. Embedding memory bank
+3. Cosine retrieval
+4. Differentiable top-k routing
+5. Conditional text generation
+
+The project also includes:
+- standalone encoder pretraining,
+- full joint training,
+- NumPy vs Cython comparisons,
+- profiling and performance reports.
+
+Humans will build an entire retrieval architecture just to avoid admitting context windows are finite. Admirable species behavior.
+
+---
+
+## Features
+
+- Tiny transformer encoder (`numpy` / `cython`)
+- Parallel cosine retrieval
+- Straight-Through differentiable top-k
+- Joint retrieval + generation training
+- Encoder cosine-regression pretraining
+- OpenMP acceleration
+- Benchmark suite
+- Profiling utilities
+
+---
+
+## Installation
+
+### Requirements
+
+- Python 3.14+
+- `uv`
+- macOS: `libomp`
+
+### Setup
 
 ```bash
-# 1. Install OpenMP (macOS only — Linux clang/gcc ship it).
+# macOS only
 brew install libomp
 
-# 2. Sync dependencies and build the Cython + OpenMP extensions.
+# Install dependencies
 uv sync
+
+# Build Cython extensions
 uv run python setup.py build_ext --inplace
 
-# 3. Verify all three extensions import.
-uv run python -c "from src.parallel import cython_encoder, cython_index, cython_topk; print('ok')"
-```
+# Verify extensions
+uv run python -c "from src.parallel import cython_encoder, cython_index, cython_topk; print('Cython OK')"
+````
 
-## Run the benchmarks
+---
 
-Each script writes timings to `reports/*.json` and prints a speedup table.
+## Benchmarks
 
-```bash
-# Encoder forward pass, numpy vs Cython at 1/2/4/8 threads.
+```bash id="a5v3vt"
+# Encoder benchmark
 uv run python -m src.benchmarks.bench_encoder
 
-# Cosine retrieval over corpus, pure-Python vs numpy vs Cython.
+# Retrieval benchmark
 uv run python -m src.benchmarks.bench_index
 
-# Full pipeline: offline corpus encoding + online retrieval.
+# Full pipeline benchmark
 uv run python -m src.benchmarks.bench_pipeline
 
-# Matmul micro-bench: naive vs cache-blocked vs cache-blocked+SIMD vs BLAS.
+# Matmul benchmark
 uv run python -m src.benchmarks.bench_matmul --include-large
 
-# Sanity check: numpy <-> Cython agree, and outputs plug into ClaraTopK.
+# Backend consistency check
 uv run python -m src.benchmarks.integration_check
 ```
 
-## Run on a real corpus
+Reports are written to `reports/*.json`.
 
-```bash
-# Pull 10k Wikipedia paragraphs (HuggingFace `datasets`).
-uv run python -m src.data.cli pull-wiki --n 10000 --out data/wiki_10k.txt
+---
 
-# Re-run the encoder benchmark on real text.
-uv run python -m src.data.cli bench-on-real \
-    --source file --file-path data/wiki_10k.txt --n-docs 5000
+## Encoder Pretraining
+
+```bash id="n1v5le"
+uv run -m src.train_encoder
 ```
 
-`datasets` is an optional dependency; if it's not installed, all loaders
-fall back to a small bundled sample of 20 Wikipedia-flavored paragraphs.
+Pretrains the encoder using cosine regression between query embeddings and support-document embeddings.
 
-## Profile a benchmark
+---
 
-```bash
-# py-spy with native (C-frame) stack capture; flamegraph at reports/.
+## Joint Training
+
+```bash id="r5m5co"
+uv run -m src.train_joint
+```
+
+Runs full retrieval + generation joint training with backend comparisons.
+
+---
+
+## Inference
+
+```bash id="k49vqq"
+uv run -m src.inference_examples
+```
+
+Runs generation examples and compares inference speed and retrieval quality.
+
+---
+
+## Profiling
+
+```bash id="csm6zc"
+# Pipeline flamegraph
 scripts/profile.sh bench_pipeline
 
-# Other targets work too.
-scripts/profile.sh bench_matmul --include-large
-
-# Fall back to austin (better SIP behaviour on macOS) or cProfile (no C frames).
+# Alternative profilers
 PROFILER=austin   scripts/profile.sh bench_pipeline
 PROFILER=cprofile scripts/profile.sh bench_pipeline
 ```
 
-The script attaches the profiler to `.venv/bin/python` directly, sidestepping
-the macOS double-`uv-run` trap. See the comment block in `scripts/profile.sh`
-for what to try if py-spy still complains about hardened runtime.
+Because eventually every ML project becomes a profiling project with extra steps.
 
 ---
 
-## Layout
+## Project Structure
 
-```
+```text id="glk3vd"
 src/
-  models/
-    config.py        ModelConfig / IndexConfig / BenchConfig
-    memory.py        Learnable memory-token bank
-    encoder.py       Tiny 2-layer transformer (numpy + Cython backends)
-    topk.py          Differentiable Straight-Through top-k (Avner)
-    ...              decoder, attention, generation, lora, ... (Avner, WIP)
-  index/
-    builder.py       Offline doc encoding (serial + multiprocessing)
-    store.py         On-disk embedding bank
-    scorer.py        Cosine + top-k retrieval, three backends
-  parallel/
-    cython_encoder.pyx   OpenMP-parallel encoder hot kernels
-    cython_index.pyx     OpenMP-parallel cosine + top-k
-    cython_topk.pyx      OpenMP-parallel quickselect top-k (Avner)
-  data/
-    loaders.py       HuggingFace + bundled corpus / QA loaders
-    cli.py           pull-wiki / pull-qa / bench-on-real
-  benchmarks/        numpy-vs-Cython timing harnesses
-  pipeline.py        End-to-end glue (encoder -> retrieval -> ClaraTopK)
-
-setup.py             Builds all three Cython extensions in-place.
+├── models/
+├── index/
+├── parallel/
+├── benchmarks/
+├── data/
+├── encoder_pretrain.py
+├── train_joint.py
+├── inference_examples.py
+└── setup.py
 ```
 
 ---
 
-## Implementation notes
+## Implementation Notes
 
-- **Parallelism axis.** OpenMP `prange` over the batch axis for the encoder
-  and over the corpus axis for the retriever.
-- **Same weights across backends.** `build_encoder(...)` accepts a shared
-  `params=`, so the numpy baseline and the Cython version produce
-  bit-comparable outputs (~1e-6 max diff, float32 epsilon).
-- **No training.** Per the course brief, correctness doesn't matter; only
-  speed does. Encoder weights are random-initialized and never updated.
-- **Cython 3 reduction trap.** All `+=` patterns inside `prange` bodies are
-  written `acc = acc + ...` to avoid Cython's OpenMP-reduction inference,
-  which would otherwise forbid reading the accumulator in the same loop
-  iteration.
+* OpenMP parallelism via `prange`
+* Shared weights across NumPy and Cython backends
+* Comparable outputs across implementations
+* Automatic benchmark reporting
+* Full training checkpoints
 
 ---
 
 ## References
 
-- Paper: Jie He et al., *CLaRa: Bridging Retrieval and Generation with
-  Continuous Latent Reasoning*, arXiv:2511.18659 (Feb 2026).
-- Apple's reference repo: <https://github.com/apple/ml-clara>.
+* CLaRa paper: *Continuous Latent Augmented Retrieval Inference*
+* Apple reference implementation:
+  [https://github.com/apple/ml-clara](https://github.com/apple/ml-clara)
+
+```
+

@@ -4,7 +4,7 @@
     "example_id": 0,
     "question": "How many yards did the nephew of Ivory Lee Brown get during his 2004 true freshman season?",
     "reference_answer": "1,925 yards",
-    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer : filthy stepfather [unused318] redwood lebanon... realisedvah matchpers traction josiah automatic romney notation money coliseum electorressed programmers ม tina bridge utter",
+    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer : savoy traction claudiamahmah turkzooiensis synthetic enthusiastically wanderła losses gonzales objected defects enthusiastically enthusiastically undertook predecessor judas unanimously claudia liable",
     "retrieved_indices": [
       7,
       14,
@@ -15,11 +15,11 @@
       0,
       1
     ],
-    "forward_time_s": 0.0882568049710244,
-    "generate_time_s": 0.39899301202967763,
+    "forward_time_s": 0.00880918896291405,
+    "generate_time_s": 0.4898204019991681,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
-    "token_f1_simple": 0.046511627906976744,
+    "token_f1_simple": 0.047619047619047616,
     "retrieval_hit_at_k": 0.0,
     "retrieval_overlap_ratio": 0.0
   },
@@ -28,7 +28,7 @@
     "example_id": 1,
     "question": "Which city is the living place of the director of the romantic comedy Big Stone Gap?",
     "reference_answer": "New York City",
-    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : filthy depicting claudia claudia themselves coliseum 八 assembled inclusive savoymasterjun 9th undertook... [unused956] pin styles angelina... [unused956] furnishings tesla putin",
+    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : banners christ oct themselves indoorscript [unused737] gaston solid enthusiastically... realised slavery themselves engagement 5000 domingo [unused956] enthusiastically...master ranges enrique coliseum",
     "retrieved_indices": [
       14,
       5,
@@ -39,8 +39,8 @@
       2,
       3
     ],
-    "forward_time_s": 0.005809769965708256,
-    "generate_time_s": 0.4891979719977826,
+    "forward_time_s": 0.09284235397353768,
+    "generate_time_s": 0.5018756500212476,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.046511627906976744,
@@ -52,7 +52,7 @@
     "example_id": 2,
     "question": "Which city hosted the first modern Olympic Games?",
     "reference_answer": "Athens",
-    "generated_text": "question : which city hosted the first modern olympic games? answer : burkina rotherhamlib curtiss ᆸ units confirmation seine doorstep campaigns fitz claudia claudia claudia coliseum... thames judas engagement furnishings [unused862] stepfather mantle synthetic",
+    "generated_text": "question : which city hosted the first modern olympic games? answer : mysteries十 campaigns axelolin... thames involving orbiting judaspledpants 22nd workings starters bombers townsend pictureurian pronouns detection 1648 match frances",
     "retrieved_indices": [
       19,
       3,
@@ -63,8 +63,8 @@
       4,
       5
     ],
-    "forward_time_s": 0.005585102015174925,
-    "generate_time_s": 0.40036934905219823,
+    "forward_time_s": 0.09249835507944226,
+    "generate_time_s": 0.5080439250450581,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,
@@ -76,7 +76,7 @@
     "example_id": 3,
     "question": "What is RAG?",
     "reference_answer": "Retrieval-Augmented Generation",
-    "generated_text": "question : what is rag? answer : animemaster meanwhile [unused956]ɕ drains holdings [unused722] basketball finest joshi furnishingsmah modify molten motions brigades kelsey utter scripture sakura warily relevant townsend",
+    "generated_text": "question : what is rag? answer : animemaster neared anders listings offendermahmahsham lasᅵ loosened parts shale gruff ו rifle defects representatives hammering intervened beaumont bombers cumberland",
     "retrieved_indices": [
       12,
       15,
@@ -86,8 +86,8 @@
     "supporting_doc_indices": [
       6
     ],
-    "forward_time_s": 0.0047987368889153,
-    "generate_time_s": 0.40255447500385344,
+    "forward_time_s": 0.00618955004028976,
+    "generate_time_s": 0.4970315599348396,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,
@@ -99,7 +99,7 @@
     "example_id": 4,
     "question": "What does SIMD stand for?",
     "reference_answer": "Single Instruction Multiple Data",
-    "generated_text": "question : what does simd stand for? answer : mysteries circle whitley introduce 1757 angelina molten motions josiahlich considering abdul enthusiastically wander 11 psalms judas rochelleɕ darling aberdeeninus trades bandits",
+    "generated_text": "question : what does simd stand for? answer : circle whitley ћ salvadorவ 11ﬁ jays ingredient 5000ignmentfia salmon sitcom quo guarded framenies scripture 5000 psalms shifted ceded 123",
     "retrieved_indices": [
       6,
       15,
@@ -109,8 +109,8 @@
     "supporting_doc_indices": [
       12
     ],
-    "forward_time_s": 0.08793935389257967,
-    "generate_time_s": 0.4073285909835249,
+    "forward_time_s": 0.0919093550182879,
+    "generate_time_s": 0.506795858964324,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,
@@ -122,7 +122,7 @@
     "example_id": 0,
     "question": "How many yards did the nephew of Ivory Lee Brown get during his 2004 true freshman season?",
     "reference_answer": "1,925 yards",
-    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer :dilly jayslham matchtub maiden 1840s...masterjun potential seeks introduce showcasing 49ers las 1816olin... lord domingo pronouns quo wedge",
+    "generated_text": "question : how many yards did the nephew of ivory lee brown get during his 2004 true freshman season? answer :vah composite coliseum 八olin hivmaster nak... thames weighted dusk...master crank objected ћ contradiction... thames redwood 1648 hiv trades",
     "retrieved_indices": [
       7,
       14,
@@ -133,11 +133,11 @@
       0,
       1
     ],
-    "forward_time_s": 0.04532862501218915,
-    "generate_time_s": 3.9721886510960758,
+    "forward_time_s": 0.07620408793445677,
+    "generate_time_s": 3.9260463869431987,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
-    "token_f1_simple": 0.05128205128205129,
+    "token_f1_simple": 0.05,
     "retrieval_hit_at_k": 0.0,
     "retrieval_overlap_ratio": 0.0
   },
@@ -146,7 +146,7 @@
     "example_id": 1,
     "question": "Which city is the living place of the director of the romantic comedy Big Stone Gap?",
     "reference_answer": "New York City",
-    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : banners christtz...master crank... creativity documentaries flushing themselves coliseum elector erected filthy themselves... [unused956] scripture pin themselves fiddle luggage seymour",
+    "generated_text": "question : which city is the living place of the director of the romantic comedy big stone gap? answer : savoy traction claudia竹 shotgun styles basketball finest joshitz...masterjun potential [unused144]ressed gonzales objected objected ћ...master pagan...",
     "retrieved_indices": [
       14,
       5,
@@ -157,11 +157,11 @@
       2,
       3
     ],
-    "forward_time_s": 0.2084894279250875,
-    "generate_time_s": 4.107418538071215,
+    "forward_time_s": 0.19563122699037194,
+    "generate_time_s": 3.969948531012051,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
-    "token_f1_simple": 0.047619047619047616,
+    "token_f1_simple": 0.05263157894736842,
     "retrieval_hit_at_k": 0.0,
     "retrieval_overlap_ratio": 0.0
   },
@@ -170,7 +170,7 @@
     "example_id": 2,
     "question": "Which city hosted the first modern Olympic Games?",
     "reference_answer": "Athens",
-    "generated_text": "question : which city hosted the first modern olympic games? answer : sublime doin drains reviewing covert nearly illustration [unused62]cki seeks hove ostensibly elder claudia coliseum 八olin furnishings sublime doin objected defects representatives hammering",
+    "generated_text": "question : which city hosted the first modern olympic games? answer : mysteries redwood savoy traction defects modular rotary neared furnishings sikhs craftsmen obey reporters townsend exposition claudia bombers townsend picture [unused845] priority fatigue phone 256",
     "retrieved_indices": [
       4,
       3,
@@ -181,8 +181,8 @@
       4,
       5
     ],
-    "forward_time_s": 0.2010799200506881,
-    "generate_time_s": 4.276000325102359,
+    "forward_time_s": 0.14070679002907127,
+    "generate_time_s": 4.3652437020791695,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,
@@ -194,7 +194,7 @@
     "example_id": 3,
     "question": "What is RAG?",
     "reference_answer": "Retrieval-Augmented Generation",
-    "generated_text": "question : what is rag? answer : savoy traction defectsnies exposition capablegman courageous enthusiastically wander molten units scripture prick furnishingsmahmah intervened introduce showcasing enthusiastically wander destroys enthusiastically",
+    "generated_text": "question : what is rag? answer : mysteries zoologyusion point sections drummer doin generalized avengers fred advisingtight wessex country armagh savoymaster crank furnishings ngo sergeanticum scripture prick",
     "retrieved_indices": [
       12,
       15,
@@ -204,8 +204,8 @@
     "supporting_doc_indices": [
       6
     ],
-    "forward_time_s": 0.19935220200568438,
-    "generate_time_s": 4.286203195923008,
+    "forward_time_s": 0.21991048892959952,
+    "generate_time_s": 4.483639944926836,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,
@@ -217,7 +217,7 @@
     "example_id": 4,
     "question": "What does SIMD stand for?",
     "reference_answer": "Single Instruction Multiple Data",
-    "generated_text": "question : what does simd stand for? answer : animeje pistols seymourfia color bombers las 5000ignment hostages motorway working evaluatedpathy disregard providence mccythe counties f founders elector ћ",
+    "generated_text": "question : what does simd stand for? answer : mysteriessworth defense psalms shifted picture siemenspathy disregard xbox frantic prevents 車 pods trades locationsicum programmersathic outnumbered capable [unused362] 5000 domingo",
     "retrieved_indices": [
       15,
       6,
@@ -227,8 +227,8 @@
     "supporting_doc_indices": [
       12
     ],
-    "forward_time_s": 0.20010152098257095,
-    "generate_time_s": 4.294745889026672,
+    "forward_time_s": 0.21821845404338092,
+    "generate_time_s": 4.292600849061273,
     "generated_num_tokens": 88,
     "exact_match_text": 0.0,
     "token_f1_simple": 0.0,

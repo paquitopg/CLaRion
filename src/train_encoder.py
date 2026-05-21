@@ -317,7 +317,9 @@ def save_comparison_report(all_results: list[dict], output_dir: str = "./logs/en
         _save_fig(fig, out / "backend_compare.png")
 
     if not perf_df.empty:
-        perf_plot = perf_df.copy()
+        threshold = 0.01
+        perf_plot = perf_df[perf_df["mean_s"] >= threshold].copy()
+        perf_plot = perf_plot.sort_values(["mean_s", "backend"], ascending=[False, True])
         fig, ax = plt.subplots(figsize=(10, 5))
         sns.barplot(
             data=perf_plot.sort_values(["stage", "backend"]),
