@@ -10,7 +10,8 @@ CPU-parallel reimplementation of the CLaRa architecture with:
 - OpenMP acceleration,
 - end-to-end benchmarking and profiling tools.
 
-Authors: **Avner El Baz**, **Paco Goze**
+Authors: **Avner El Baz** (avner.el-baz@ensae.fr), **Paco Goze** (paco.goze@polytechnique.edu)
+Feel free to reach out ! 
 
 ---
 
