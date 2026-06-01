@@ -11,6 +11,7 @@ CPU-parallel reimplementation of the CLaRa architecture with:
 - end-to-end benchmarking and profiling tools.
 
 Authors: **Avner El Baz** (avner.el-baz@ensae.fr), **Paco Goze** (paco.goze@polytechnique.edu)
+
 Feel free to reach out ! 
 
 ---
